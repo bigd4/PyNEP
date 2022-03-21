@@ -59,6 +59,7 @@ class NepCalculator
 NepCalculator::NepCalculator(std::string _model_file)
 {
   model_file = _model_file;
+  calc = NEP3(model_file);
 }
 
 void NepCalculator::setAtoms(
@@ -89,7 +90,6 @@ void NepCalculator::setAtoms(
   _atom.virial.resize(_atom.N * 9);
 
   atom = _atom;
-  calc = NEP3(model_file);
 }
 
 void NepCalculator::calculate()
