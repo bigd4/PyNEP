@@ -5,7 +5,12 @@ from .nep import NepCalculator
 
 class NEP(Calculator):
 
-    implemented_properties = ["energy", "forces", "stress"]
+    implemented_properties = [
+        "energy", 
+        "forces", 
+        "stress", 
+        "descriptor",
+        ]
 
     def __init__(self, type_dict, model_file="nep.txt", **kwargs) -> None:
         Calculator.__init__(self, **kwargs)
@@ -30,11 +35,14 @@ class NEP(Calculator):
         self.calc.calculate()
         self.results["energy"] = np.sum(self.calc.getPotentialEnergy())
         self.results["forces"] = np.array(self.calc.getForces()).reshape(3, -1).transpose(1, 0)
-        virial = np.sum(np.array(self.calc.getVirials()).reshape(9, -1), axis=1)
 
         if "stress" in properties:
+            virial = np.sum(np.array(self.calc.getVirials()).reshape(9, -1), axis=1)
             if sum(atoms.get_pbc()) > 0:
                 stress = -0.5 * (virial.copy() + virial.copy().T) / atoms.get_volume()
                 self.results['stress'] = stress.flat[[0, 4, 8, 5, 2, 1]]
             else:
                 raise PropertyNotImplementedError
+
+        if "descriptor" in properties:
+            self.results['descriptor'] = np.array(self.calc.getDescriptors()).reshape(-1, len(atoms)).transpose(1, 0)

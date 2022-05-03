@@ -12,7 +12,7 @@ namespace py = pybind11;
 struct Atom {
   int N;
   std::vector<int> type;
-  std::vector<double> box, position, potential, force, virial;
+  std::vector<double> box, position, potential, force, virial, descriptor;
 };
 
 class NepCalculator
@@ -24,6 +24,7 @@ class NepCalculator
     std::vector<double> getPotentialEnergy();
     std::vector<double> getForces();
     std::vector<double> getVirials();
+    std::vector<double> getDescriptors();
   private:
     Atom atom;
     NEP3 calc;
@@ -59,6 +60,8 @@ void NepCalculator::setAtoms(
 void NepCalculator::calculate()
 {
   calc.compute(atom.type, atom.box, atom.position, atom.potential, atom.force, atom.virial);
+  atom.descriptor.resize(calc.Fp.size());
+  calc.find_descriptor(atom.type, atom.box, atom.position, atom.descriptor);
 }
 
 std::vector<double> NepCalculator::getPotentialEnergy()
@@ -76,6 +79,11 @@ std::vector<double> NepCalculator::getVirials()
   return atom.virial;
 }
 
+std::vector<double> NepCalculator::getDescriptors()
+{
+  return atom.descriptor;
+}
+
 PYBIND11_MODULE(nep, m){
     m.doc() = "nep";
     py::class_<NepCalculator>(m, "NepCalculator")
@@ -85,5 +93,6 @@ PYBIND11_MODULE(nep, m){
 		.def("getPotentialEnergy", &NepCalculator::getPotentialEnergy)
     .def("getForces", &NepCalculator::getForces)
     .def("getVirials", &NepCalculator::getVirials)
+    .def("getDescriptors", &NepCalculator::getDescriptors)
 		;
 }
