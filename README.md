@@ -3,7 +3,7 @@
 ## Features
 
 - ase calculator of NEP
-
+- latent descriptor of atoms
 ## Installation
 
 ### Requirements
