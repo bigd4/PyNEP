@@ -69,6 +69,7 @@ void NepCalculator::setAtoms(
   _atom.potential.resize(_atom.N);
   _atom.force.resize(_atom.N * 3);
   _atom.virial.resize(_atom.N * 9);
+  _atom.descriptor.resize(_atom.N * calc.annmb.dim);
 
   atom = _atom;
 }
@@ -76,7 +77,6 @@ void NepCalculator::setAtoms(
 void NepCalculator::calculate()
 {
   calc.compute(atom.type, atom.box, atom.position, atom.potential, atom.force, atom.virial);
-  atom.descriptor.resize(calc.Fp.size());
   calc.find_descriptor(atom.type, atom.box, atom.position, atom.descriptor);
 }
 
