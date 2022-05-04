@@ -4,6 +4,8 @@
 
 - ase calculator of NEP
 - latent descriptor of atoms
+- structures select
+    + Farthest Point Sampling
 ## Installation
 
 ### Requirements
