@@ -1347,24 +1347,22 @@ NEP3::NEP3(const std::string& potential_filename)
     std::cout << "    basis_size_angular = " << paramb.basis_size_angular << ".\n";
   }
 
-  int L_max_4body = 0;
-  int L_max_5body = 0;
   if (paramb.version == 2) {
     input_file >> name >> paramb.L_max;
     std::cout << "    l_max_3body = " << paramb.L_max << ".\n";
   } else {
-    input_file >> name >> paramb.L_max >> L_max_4body >> L_max_5body;
+    input_file >> name >> paramb.L_max >> paramb.L_max_4body >> paramb.L_max_5body;
     std::cout << "    l_max_3body = " << paramb.L_max << ".\n";
-    std::cout << "    l_max_4body = " << L_max_4body << ".\n";
-    std::cout << "    l_max_5body = " << L_max_5body << ".\n";
+    std::cout << "    l_max_4body = " << paramb.L_max_4body << ".\n";
+    std::cout << "    l_max_5body = " << paramb.L_max_5body << ".\n";
   }
 
   paramb.num_L = paramb.L_max;
   if (paramb.version == 3) {
-    if (L_max_4body == 2) {
+    if (paramb.L_max_4body == 2) {
       paramb.num_L += 1;
     }
-    if (L_max_5body == 1) {
+    if (paramb.L_max_5body == 1) {
       paramb.num_L += 1;
     }
   }

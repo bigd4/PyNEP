@@ -29,6 +29,8 @@ public:
     int n_max_radial = 0;
     int n_max_angular = 0;
     int L_max = 0;
+    int L_max_4body = -1;
+    int L_max_5body = -1;
     int dim_angular;
     int num_L;
     int basis_size_radial = 8;

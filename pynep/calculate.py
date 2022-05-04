@@ -17,6 +17,18 @@ class NEP(Calculator):
         self.calc = NepCalculator(model_file)
         self.type_dict = type_dict
 
+    def __repr__(self):
+        info = self.calc.info
+        ret = "NEP {} calculator with {} symbols: ".format(info['version'], len(self.type_dict))
+        info.pop("version")
+        for key in self.type_dict:
+            ret += key + " "
+        ret += "\n" + "-" * 30
+        for key, value in info.items():
+            ret += "\n  {}: {}".format(key.ljust(20, ' '), value)
+        ret += "\n" + "-" * 30 + "\n"
+        return ret
+
     def calculate(
         self,
         atoms=None,

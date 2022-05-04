@@ -21,6 +21,7 @@ class NepCalculator
     NepCalculator(std::string);
     void setAtoms(int, std::vector<int>, std::vector<double>, std::vector<double>);
     void calculate();
+    py::dict info;
     std::vector<double> getPotentialEnergy();
     std::vector<double> getForces();
     std::vector<double> getVirials();
@@ -35,6 +36,21 @@ NepCalculator::NepCalculator(std::string _model_file)
 {
   model_file = _model_file;
   calc = NEP3(model_file);
+  info["version"] = calc.paramb.version;
+  info["zbl"] = calc.zbl.enabled;
+  info["radial_cutoff"] = calc.paramb.rc_radial;
+  info["angular_cutoff"] = calc.paramb.rc_angular;
+  info["n_max_radial"] = calc.paramb.n_max_radial;
+  info["n_max_angular"] = calc.paramb.n_max_angular;
+  info["basis_size_radial"] = calc.paramb.basis_size_radial;
+  info["basis_size_angular"] = calc.paramb.basis_size_angular;
+  info["l_max_3body"] = calc.paramb.L_max;
+  if (calc.paramb.version > 2) {
+    info["l_max_4body"] = calc.paramb.L_max_4body;
+    info["l_max_5body"] = calc.paramb.L_max_5body;
+  }
+  info["num_node"] = calc.annmb.dim;
+  info["num_para"] = calc.annmb.num_para;
 }
 
 void NepCalculator::setAtoms(
@@ -88,6 +104,7 @@ PYBIND11_MODULE(nep, m){
     m.doc() = "nep";
     py::class_<NepCalculator>(m, "NepCalculator")
 		.def(py::init<std::string>())
+    .def_readonly("info", &NepCalculator::info)
 		.def("setAtoms", &NepCalculator::setAtoms)
 		.def("calculate", &NepCalculator::calculate)
 		.def("getPotentialEnergy", &NepCalculator::getPotentialEnergy)
