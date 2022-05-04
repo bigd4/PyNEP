@@ -4,6 +4,9 @@ test/
 .vs
 .history
 .VSCodeCounter
+!examples/*.py
+!examples/C_2022_NEP3.txt
+!examples/data.traj
 # tex info
 /doc/*
 !/doc/pic

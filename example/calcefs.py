@@ -1,10 +1,13 @@
 from pynep.calculate import NEP
 from ase.io import read
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
 
 def plot_e(ed, er):
     fig = plt.figure()
-    plt.xticks(fontname="Arial", weight='bold')
+    # plt.xticks(fontname="Arial", weight='bold')
     plt.title("NEP energy vs DFT energy", fontsize=16)
     ed = ed - np.mean(ed)
     er = er - np.mean(er)
@@ -104,6 +107,6 @@ e1 = np.array(e1)
 e2 = np.array(e2)
 f1 = np.concatenate(f1)
 f2 = np.concatenate(f2)
-plot_e(e1, e2)
-plot_f(f1, f2)
+plot_e(e2, e1)
+plot_f(f2, f1)
 
