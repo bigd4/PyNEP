@@ -10,6 +10,7 @@ class NEP(Calculator):
         "forces", 
         "stress", 
         "descriptor",
+        "latent",
         ]
 
     def __init__(self, type_dict, model_file="nep.txt", **kwargs) -> None:
@@ -58,3 +59,6 @@ class NEP(Calculator):
 
         if "descriptor" in properties:
             self.results['descriptor'] = np.array(self.calc.getDescriptors()).reshape(-1, len(atoms)).transpose(1, 0)
+
+        if "latent" in properties:
+            self.results['latent'] = np.array(self.calc.getLatent()).reshape(-1, len(atoms)).transpose(1, 0)
