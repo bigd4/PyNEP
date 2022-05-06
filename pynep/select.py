@@ -20,12 +20,11 @@ class FarthestPointSample:
             to_add.append(0)
             now_data.append(new_data[0])
         distances = np.min(cdist(new_data, now_data, metric=self.metric), axis=1)
-        self_distances = cdist(new_data, new_data, metric=self.metric)
 
         while np.max(distances) > min_distance or len(to_add) < min_select:
             i = np.argmax(distances)
             to_add.append(i)
             if len(to_add) >= max_select:
                 break
-            distances = np.minimum(distances, self_distances[i])
+            distances = np.minimum(distances, cdist([new_data[i]], new_data, metric=self.metric)[0])
         return to_add
