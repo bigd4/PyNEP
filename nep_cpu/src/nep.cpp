@@ -1323,12 +1323,6 @@ NEP3::NEP3(const std::string& potential_filename)
 
   input_file >> paramb.num_types;
 
-  if (paramb.version == 2) {
-    std::cout << "Use the NEP2 potential with " << paramb.num_types << " atom type(s).\n";
-  } else {
-    std::cout << "Use the NEP3 potential with " << paramb.num_types << " atom type(s).\n";
-  }
-
   char name[20];
   element_list.resize(paramb.num_types);
   for (int n = 0; n < paramb.num_types; ++n) {
@@ -1341,38 +1335,23 @@ NEP3::NEP3(const std::string& potential_filename)
       }
     }
     zbl.atomic_numbers[n] = atomic_number;
-    std::cout << "    type " << n << " (" << element_list[n] << " with Z = " << zbl.atomic_numbers[n]
-              << ").\n";
   }
   
   if (zbl.enabled) {
     input_file >> name >> zbl.rc_inner >> zbl.rc_outer;
-    std::cout << "    has ZBL with inner cutoff " << zbl.rc_inner << " A and outer cutoff "
-              << zbl.rc_outer << " A.\n";
   }
 
   input_file >> name >> paramb.rc_radial >> paramb.rc_angular;
-  std::cout << "    radial cutoff = " << paramb.rc_radial << " A.\n";
-  std::cout << "    angular cutoff = " << paramb.rc_angular << " A.\n";
-
   input_file >> name >> paramb.n_max_radial >> paramb.n_max_angular;
-  std::cout << "    n_max_radial = " << paramb.n_max_radial << ".\n";
-  std::cout << "    n_max_angular = " << paramb.n_max_angular << ".\n";
 
   if (paramb.version == 3) {
     input_file >> name >> paramb.basis_size_radial >> paramb.basis_size_angular;
-    std::cout << "    basis_size_radial = " << paramb.basis_size_radial << ".\n";
-    std::cout << "    basis_size_angular = " << paramb.basis_size_angular << ".\n";
   }
 
   if (paramb.version == 2) {
     input_file >> name >> paramb.L_max;
-    std::cout << "    l_max_3body = " << paramb.L_max << ".\n";
   } else {
     input_file >> name >> paramb.L_max >> paramb.L_max_4body >> paramb.L_max_5body;
-    std::cout << "    l_max_3body = " << paramb.L_max << ".\n";
-    std::cout << "    l_max_4body = " << paramb.L_max_4body << ".\n";
-    std::cout << "    l_max_5body = " << paramb.L_max_5body << ".\n";
   }
 
   paramb.num_L = paramb.L_max;
@@ -1393,10 +1372,7 @@ NEP3::NEP3(const std::string& potential_filename)
   paramb.rcinv_angular = 1.0 / paramb.rc_angular;
   annmb.dim = (paramb.n_max_radial + 1) + (paramb.n_max_angular + 1) * paramb.num_L;
 
-  std::cout << "    ANN = " << annmb.dim << "-" << annmb.num_neurons1 << "-1.\n";
-
   annmb.num_para = (annmb.dim + 2) * annmb.num_neurons1 + 1;
-  std::cout << "    number of neural network parameters = " << annmb.num_para << ".\n";
   int num_para_descriptor = paramb.num_types * paramb.num_types *
                             ((paramb.n_max_radial + 1) * (paramb.basis_size_radial + 1) +
                              (paramb.n_max_angular + 1) * (paramb.basis_size_angular + 1));
@@ -1406,9 +1382,7 @@ NEP3::NEP3(const std::string& potential_filename)
         ? 0
         : paramb.num_types * paramb.num_types * (paramb.n_max_radial + paramb.n_max_angular + 2);
   }
-  std::cout << "    number of descriptor parameters = " << num_para_descriptor << ".\n";
   annmb.num_para += num_para_descriptor;
-  std::cout << "    total number of parameters = " << annmb.num_para << ".\n";
 
   paramb.num_types_sq = paramb.num_types * paramb.num_types;
   paramb.num_c_radial =
