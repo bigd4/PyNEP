@@ -95,7 +95,7 @@ def plot_f(fd, fr):
     return fig
 
 a = read('data.traj', ':')
-calc = NEP({'C': 0}, "C_2022_NEP3.txt")
+calc = NEP("C_2022_NEP3.txt")
 e1, e2, f1, f2 = [], [], [], []
 for i in a:
     i.set_calculator(calc)

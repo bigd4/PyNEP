@@ -53,6 +53,7 @@ NepCalculator::NepCalculator(std::string _model_file)
   }
   info["num_node"] = calc.annmb.dim;
   info["num_para"] = calc.annmb.num_para;
+  info["element_list"] = calc.element_list;
 }
 
 void NepCalculator::setAtoms(

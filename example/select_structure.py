@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 
 
 a = read('data.traj', ':')
-calc = NEP({'C': 0}, "C_2022_NEP3.txt")
+calc = NEP("C_2022_NEP3.txt")
 des = np.array([np.mean(calc.get_property('descriptor', i), axis=0) for i in a])
 sampler = FarthestPointSample(min_distance=0.05)
 selected_i = sampler.select(des, [])

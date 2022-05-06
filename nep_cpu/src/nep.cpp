@@ -1330,22 +1330,21 @@ NEP3::NEP3(const std::string& potential_filename)
   }
 
   char name[20];
-
+  element_list.resize(paramb.num_types);
   for (int n = 0; n < paramb.num_types; ++n) {
-    std::string element;
-    input_file >> element;
+    input_file >> element_list[n];
     int atomic_number = 0;
     for (int m = 0; m < NUM_ELEMENTS; ++m) {
-      if (element == ELEMENTS[m]) {
+      if (element_list[n] == ELEMENTS[m]) {
         atomic_number = m + 1;
         break;
       }
     }
     zbl.atomic_numbers[n] = atomic_number;
-    std::cout << "    type " << n << " (" << element << " with Z = " << zbl.atomic_numbers[n]
+    std::cout << "    type " << n << " (" << element_list[n] << " with Z = " << zbl.atomic_numbers[n]
               << ").\n";
   }
-
+  
   if (zbl.enabled) {
     input_file >> name >> zbl.rc_inner >> zbl.rc_outer;
     std::cout << "    has ZBL with inner cutoff " << zbl.rc_inner << " A and outer cutoff "

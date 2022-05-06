@@ -13,10 +13,10 @@ class NEP(Calculator):
         "latent",
         ]
 
-    def __init__(self, type_dict, model_file="nep.txt", **kwargs) -> None:
+    def __init__(self, model_file="nep.txt", **kwargs) -> None:
         Calculator.__init__(self, **kwargs)
         self.calc = NepCalculator(model_file)
-        self.type_dict = type_dict
+        self.type_dict = {e: i for i, e in enumerate(self.calc.info["element_list"])}
 
     def __repr__(self):
         info = self.calc.info
