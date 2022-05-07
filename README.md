@@ -3,7 +3,9 @@
 ## Features
 
 - ase calculator of NEP
-- latent descriptor of atoms
+- descriptor and latent descriptor calculation of atoms
+- load and dump for GPUMD dataset
+- phonopy calculation of NEP (need phonopy)
 - structures select
     + Farthest Point Sampling
 ## Installation
