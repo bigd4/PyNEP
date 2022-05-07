@@ -5,7 +5,7 @@
 - ase calculator of NEP
 - descriptor and latent descriptor calculation of atoms
 - load and dump for GPUMD dataset
-- phonopy calculation of NEP (need phonopy)
+- phonopy calculation of NEP (need phonopy and spglib)
 - structures select
     + Farthest Point Sampling
 ## Installation
@@ -55,14 +55,30 @@ $ export PYTHONPATH=<path-to-pynep-package>:$PYTHONPATH
 ## Usage
 
 ```python
-from pynep.calculate import NEP
-import numpy as np
 from ase.build import bulk
+atoms = bulk('C', 'diamond', cubic=True)
 
-a = bulk('TePb', 'rocksalt', 6.6)
-calc = NEP({'Te': 0, 'Pb': 1}, "nep.txt")
-a.set_calculator(calc)
-e = a.get_potential_energy()
-f = a.get_forces()
+# calculate energy and forces
+from pynep.calculate import NEP
+calc = NEP('nep.txt')
+atoms = bulk('C', 'diamond', cubic=True)
+atoms.set_calculator(calc)
+energy = atoms.get_potential_energy()
+forces = atoms.get_forces()
+stress = atoms.get_stress()  # stress in ase is different from virial in GPUMD
+
+# calculate descriptors and latent descriptors
+des = calc.get_property('descriptor', atoms)
+lat = calc.get_property('latent', atoms)
+
+# load and dump GPUMD data
+from pynep.io import load_nep, dump_nep
+dump_nep('C.in', [atoms])
+atoms = load_nep('C.in')[0]
+
+# calculate band strucuture, dos and thermal properties (need spglib and phonopy)
+from pynep.phono import PhonoCalc
+phono_calc = PhonoCalc(calc)
+phono_calc.calculate(atoms)
 ```
 
