@@ -123,3 +123,60 @@ class Strain(Mutation):
             if self.check_distance(a, np.arange(len(a)), tolerance_distances):
                 return a
         return None
+
+
+class Swap(Mutation):
+    def __init__(self, swap_probability=0.8, d_ratio=0.8, min_dis_mat=None, attempt_number=200):
+        super().__init__(d_ratio=d_ratio, min_dis_mat=min_dis_mat, attempt_number=attempt_number)
+        self.swap_probability = swap_probability
+
+    def mutate(self, atoms):
+        a = atoms.copy()
+        num_swaps = np.random.randint(1, max(int(self.swap_probability * len(atoms)), 2))
+        unique_symbols = list(set(atoms.get_chemical_symbols()))
+        tolerance_distances = self.get_tolerance_distances(a)
+        if len(unique_symbols) < 2:
+            return None
+        success_change = 0
+        for _ in range(num_swaps):
+            for n in range(self.attempt_number):
+                s1, s2 = np.random.choice(unique_symbols, 2, replace=False)
+                s1_list = [i for i in range(len(a)) if a[i].symbol == s1]
+                s2_list = [i for i in range(len(a)) if a[i].symbol == s2]
+                i = np.random.choice(s1_list)
+                j = np.random.choice(s2_list)
+                a[i].symbol, a[j].symbol = a[j].symbol, a[i].symbol
+                if self.check_distance(a, [i, j], tolerance_distances):
+                    success_change += 1
+                    break 
+                else:
+                    a[i].symbol, a[j].symbol = a[j].symbol, a[i].symbol
+        if success_change < 0.6 * num_swaps:
+            return None
+        return a
+
+
+class ChangeAtomType(Mutation):
+    def __init__(self, change_probability=0.8, d_ratio=0.8, min_dis_mat=None, attempt_number=200):
+        super().__init__(d_ratio=d_ratio, min_dis_mat=min_dis_mat, attempt_number=attempt_number)
+        self.change_probability = change_probability
+
+    def mutate(self, atoms):
+        a = atoms.copy()
+        unique_symbols = list(set(atoms.get_chemical_symbols()))
+        tolerance_distances = self.get_tolerance_distances(a)
+        if len(unique_symbols) < 2:
+            return None
+        success_change = 0
+        for _ in range(self.attempt_number):
+            for i in range(len(a)):
+                if np.random.rand() < self.change_probability:
+                    s1 = a[i].symbol
+                    s2 = np.random.choice([s for s in unique_symbols if s != s1])
+                    a[i].symbol = s2
+                if self.check_distance(a, [i], tolerance_distances):
+                    success_change += 1
+                    break 
+                else:
+                    a[i].symbol = s1
+        return a

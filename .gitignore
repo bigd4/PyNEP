@@ -7,6 +7,7 @@ test/
 !examples/*.py
 !examples/C_2022_NEP3.txt
 !examples/data.traj
+!examples/PbTe.in
 # tex info
 /doc/*
 !/doc/pic
