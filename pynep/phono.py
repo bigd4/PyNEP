@@ -1,3 +1,4 @@
+import traceback
 import numpy as np
 import spglib
 import ase
@@ -88,7 +89,8 @@ class PhonoCalc:
                      'dielectric_constant': True})
             phpy_yaml.set_phonon_info(self.phonon)
             atoms.info['phono_info'] = phpy_yaml._yaml
-        except:
+        except Exception as e:
+            print(traceback.format_exc())
             print('Fail to collect force constants')
             return atoms
         if 'band' in properties:
@@ -121,12 +123,14 @@ class PhonoCalc:
     def get_force_constants(self, atoms):
         unitcell = ase2phono(atoms)
         supercell_matrix = self.get_supercell_matrix(atoms)
-        primitive_lattice = spglib.find_primitive(atoms)[0]
-        primitive_matrix = primitive_lattice @ np.linalg.inv(atoms.cell)
+        # primitive_lattice = spglib.find_primitive(atoms)[0]
+        # primitive_matrix = np.linalg.inv(atoms.cell[:]).T @ primitive_lattice.T
         self.phonon = Phonopy(
             unitcell=unitcell, 
             supercell_matrix=supercell_matrix,
-            primitive_matrix=primitive_matrix)
+            # primitive_matrix=primitive_matrix,
+            primitive_matrix='auto',
+            )
         self.phonon.generate_displacements(distance=0.01)
         supercells = self.phonon.get_supercells_with_displacements()
         set_of_forces = []
