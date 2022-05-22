@@ -56,7 +56,7 @@ def dump_nep(filename, frames):
             ret = str(atoms.info['energy'])
             if 'stress' in atoms.info:
                 if len(atoms.info['stress']) == 6:
-                    virial = -atoms.info['stress'][[0, 1, 2, 4, 5, 3]] * atoms.get_volume()
+                    virial = -atoms.info['stress'][[0, 1, 2, 5, 3, 4]] * atoms.get_volume()
                 else:
                     virial = -atoms.info['stress'][[0, 1, 2, 0, 1, 2], [0, 1, 2, 1, 2, 0]] * atoms.get_volume()
                 for v in virial:
