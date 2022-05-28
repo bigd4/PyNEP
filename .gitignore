@@ -10,10 +10,9 @@ test/
 !examples/PbTe.in
 # tex info
 /doc/*
-!/doc/pic
-!/doc/manual.tex
-!/doc/manual.pdf
-!/doc/html
+!/docs/source/conf.py
+!/docs/source/index.rst
+!/docs/requiremets.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
