@@ -5,6 +5,29 @@ from .nep import NepCalculator
 
 class NEP(Calculator):
 
+    """ASE calculator for NEP (see https://github.com/brucefan1983/GPUMD)
+    supported properties: energy, forces, stress, descriptor, latent descriptor
+    
+    Examples:
+
+    Use C_2022_NEP3.txt to calculate properties of diamond 
+    (from https://github.com/brucefan1983/GPUMD/tree/master/potentials/nepCalculate)
+
+    energy, forces and stress:
+
+    >>> calc = NEP('C_2022_NEP3.txt')
+    >>> atoms = bulk('C', 'diamond', cubic=True)
+    >>> atoms.set_calculator(calc)
+    >>> energy = atoms.get_potential_energy()
+    >>> forces = atoms.get_forces()
+    >>> stress = atoms.get_stress()
+
+    descriptor and latent descriptor:
+
+    >>> des = calc.get_property('descriptor', atoms)
+    >>> lat = calc.get_property('latent', atoms)
+    """
+
     implemented_properties = [
         "energy", 
         "forces", 
@@ -14,6 +37,11 @@ class NEP(Calculator):
         ]
 
     def __init__(self, model_file="nep.txt", **kwargs) -> None:
+        """Initialize calculator
+
+        Args:
+            model_file (str, optional): filename of nep model. Defaults to "nep.txt".
+        """
         Calculator.__init__(self, **kwargs)
         self.calc = NepCalculator(model_file)
         self.type_dict = {e: i for i, e in enumerate(self.calc.info["element_list"])}

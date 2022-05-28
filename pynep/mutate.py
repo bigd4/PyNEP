@@ -5,13 +5,35 @@ from ase.geometry import get_distances
 
 
 class Mutation(abc.ABC):
+    """Base class of Muatation
+    """
     def __init__(self, d_ratio=0.8, min_dis_mat=None, attempt_number=200):
+        """Initialize Mutation Object
+
+        Args:
+            d_ratio (float, optional): Use d_ratio * covalent_radii to calculate min_dis_mat.
+                If min_dis_mat is given, this will be ignored.
+                Defaults to 0.8. 
+            min_dis_mat (dict , optional): min distance between two atoms.
+                Such as {('C', 'C'): 1.} 
+                Defaults to None. 
+            attempt_number (int, optional): Max times to try to mutate. 
+                Defaults to 200.
+        """
         self.d_ratio = d_ratio
         self.min_dis_mat = min_dis_mat
         self.attempt_number = attempt_number
         self.descriptor = self.__class__.__name__
 
     def get_tolerance_distances(self, atoms):
+        """get min distance between atoms
+
+        Args:
+            atoms (Atoms): atoms to constuct the tolerance distances
+
+        Returns:
+            2d list: min distances matrix
+        """
         if self.min_dis_mat is None:
             unique_symbol = set(atoms.get_chemical_symbols())
             radius = {symbol: self.d_ratio * covalent_radii[atomic_numbers[symbol]] for symbol in unique_symbol}
@@ -24,6 +46,15 @@ class Mutation(abc.ABC):
         return np.array(tolerance_distances)
 
     def generate(self, atoms, number=10):
+        """generate atoms
+
+        Args:
+            atoms (Atoms): atoms to be mutated
+            number (int, optional): number of new atoms to be generated. Defaults to 10.
+
+        Returns:
+            A list of atoms obeject: Generated atoms
+        """
         new_frames = []
         for _ in range(number):
             new_atoms = self.mutate(atoms)
@@ -33,10 +64,25 @@ class Mutation(abc.ABC):
 
     @abc.abstractmethod
     def mutate(self, atoms):
+        """mutate the atoms, every subclass must have this method
+
+        Args:
+            atoms (Atoms): atoms to be mutated
+        """
         pass
 
     @staticmethod
     def check_distance(atoms, indices, tolerance_distances):
+        """check distances of atoms
+
+        Args:
+            atoms (Atoms): atoms to be check
+            indices (1d list): indices of atoms to be cheak
+            tolerance_distances (allow distance between atoms): 2d list
+
+        Returns:
+            bool: If the atoms meet the requirements
+        """
         distances = get_distances(atoms.positions, atoms.positions[indices], atoms.cell, atoms.pbc)[1]
         for i, j in enumerate(indices):
             distances[j, i] = 100
@@ -46,7 +92,16 @@ class Mutation(abc.ABC):
 
 
 class Combine(Mutation):
+    """Class to combine a series of mutations
+    """
     def __init__(self, *op_list):
+        """Combile mutations
+
+        Example:
+        >>> m1 = Rattle()
+        >>> m2 = Strain()
+        >>> new = Combine(m1, m2)
+        """
         self.op_list = op_list
         self.descriptor = self.__class__.__name__
     
@@ -60,13 +115,29 @@ class Combine(Mutation):
 
 
 class Rattle(Mutation):
+    """Randomly rattle atoms
+    """
     def __init__(self, probability=0.8, rattle_range=2, d_ratio=0.8, min_dis_mat=None, attempt_number=200):
+        """
+
+        Args:
+            probability (float, optional): rattle probability of each atom
+            rattle_range (int, optional): atoms will only rattle in this range. Defaults to 2.
+        """
         super().__init__(d_ratio=d_ratio, min_dis_mat=min_dis_mat, attempt_number=attempt_number)
         self.probability = probability
         self.rattle_range = rattle_range
 
     @staticmethod
     def pos_add_sphere(rattle_strength):
+        """randomly new positions in a sphere
+
+        Args:
+            rattle_strength (float): radius of the sphere
+
+        Returns:
+            array: positions to add
+        """
         r = rattle_strength * np.random.rand()**(1/3)
         theta = np.random.uniform(low=0, high=2*np.pi)
         phi = np.random.uniform(low=0, high=np.pi)
@@ -102,7 +173,15 @@ class Rattle(Mutation):
 
 
 class Strain(Mutation):
+    """Randomly change the cell
+    """
     def __init__(self, cell_cut=1., sigma=0.1, d_ratio=0.8, min_dis_mat=None, attempt_number=200):
+        """
+
+        Args:
+            cell_cut (_type_, optional): max value of strain matrix. Defaults to 1..
+            sigma (float, optional): sigma of gaussian. Defaults to 0.1.
+        """
         super().__init__(d_ratio=d_ratio, min_dis_mat=min_dis_mat, attempt_number=attempt_number)
         self.cell_cut = cell_cut
         self.sigma = sigma
@@ -126,7 +205,15 @@ class Strain(Mutation):
 
 
 class Swap(Mutation):
+    """Swap atoms
+    """
     def __init__(self, swap_probability=0.8, d_ratio=0.8, min_dis_mat=None, attempt_number=200):
+        """
+
+        Args:
+            swap_probability (float, optional): Max swap number is swap_probability * N_atoms. 
+                Defaults to 0.8.
+        """
         super().__init__(d_ratio=d_ratio, min_dis_mat=min_dis_mat, attempt_number=attempt_number)
         self.swap_probability = swap_probability
 
@@ -157,7 +244,15 @@ class Swap(Mutation):
 
 
 class ChangeAtomType(Mutation):
+    """Change type of atom
+    """
     def __init__(self, change_probability=0.8, d_ratio=0.8, min_dis_mat=None, attempt_number=200):
+        """
+
+        Args:
+            change_probability (float, optional): change probability of each atom. 
+                Defaults to 0.8.
+        """
         super().__init__(d_ratio=d_ratio, min_dis_mat=min_dis_mat, attempt_number=attempt_number)
         self.change_probability = change_probability
 

@@ -4,6 +4,14 @@ from ase import Atoms
 
 
 def load_nep(filename):
+    """Read Atoms objects from file
+
+    Args:
+        filename (str): Name of the file to read from
+
+    Returns:
+        A list of Atoms objects: frames
+    """
     frames, n_atoms, has_virial = [], [], []
     with open(filename, 'r') as f:
         line = f.readline()
@@ -39,6 +47,12 @@ def load_nep(filename):
 
 
 def dump_nep(filename, frames):
+    """dump data in nep format
+
+    Args:
+        filename (str): Name of the file to read from
+        frames (list): a list of Atoms objects.
+    """
     for atoms in frames:
         for p in ['energy', 'forces', 'stress']:
             if p not in atoms.info:

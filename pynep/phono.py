@@ -171,4 +171,3 @@ class PhonoCalc:
         bands_dict = self.phonon.get_band_structure_dict()
         bands_dict['labels_path'] = labels_path
         return bands_dict
- 
