@@ -1,4 +1,6 @@
 # PyNEP 
+[![Documentation Status](https://readthedocs.org/projects/pynep/badge/?version=latest)](https://pynep.readthedocs.io/en/latest/)
+
 PyNEP is a python interface of the machine learning potential **NEP** used in **[GPUMD](https://github.com/brucefan1983/GPUMD)**.
 ## Features
 
