@@ -1,3 +1,9 @@
+"""
+Select structures
+===========================
+
+This example shows how to select structures from dataset
+"""
 from pynep.calculate import NEP
 from pynep.select import FarthestPointSample
 from ase.io import read, write

@@ -1,3 +1,9 @@
+"""
+NEP vs DFT results
+===========================
+
+This example show how to calculate energy, forces and stress of structures and compare them with DFT results
+"""
 from pynep.calculate import NEP
 from ase.io import read
 import numpy as np

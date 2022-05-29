@@ -11,7 +11,7 @@ test/
 # tex info
 /doc/*
 !/docs/source/conf.py
-!/docs/source/index.rst
+!/docs/source/*.rst
 !/docs/requiremets.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/

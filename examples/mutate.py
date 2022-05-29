@@ -1,3 +1,9 @@
+"""
+Mutation
+===========================
+
+This example shows how to mutate structures including Rattle, Strain, Swap, ChangeAtomType
+"""
 from pynep.mutate import Combine, Rattle, Strain, Swap, ChangeAtomType
 from ase.io import read, write
 from pynep.io import load_nep

@@ -5,16 +5,17 @@
 
 Welcome to PyNEP's documentation!
 =================================
+PyNEP is a python interface of the machine learning potential NEP used in GPUMD_.
+Now it provide ase calculator of NEP, load and dump for GPUMD dataset, 
+phonopy calculation of NEP (need phonopy and spglib) and structures select.
+
+.. _GPUMD: https://github.com/brucefan1983/GPUMD
+
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   install
+   auto_examples/index
+   pynep
