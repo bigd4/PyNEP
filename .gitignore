@@ -9,7 +9,7 @@ test/
 !examples/data.traj
 !examples/PbTe.in
 # tex info
-/doc/*
+/docs/*
 !/docs/source/conf.py
 !/docs/source/*.rst
 !/docs/requiremets.txt

@@ -30,7 +30,7 @@ class FarthestPointSample:
     
     >>> lat = np.concatenate([calc.get_property('latent', atoms) for atoms in frames])
     # shape: (Natoms, Nlatent)
-    >>> comesfrom = np.concatenate([i] * len(atoms) for i, atoms in enumerate(frames)])
+    >>> comesfrom = np.concatenate([[i] * len(atoms) for i, atoms in enumerate(frames)])
     # shape: (Natoms, )  the ith data in lat belong to the atoms: frames[comesfrom[i]]
     >>> sampler = FarthestPointSample()
     >>> indices = [comesfrom[i] for i in sampler.select(lat, [])]
