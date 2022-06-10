@@ -9,10 +9,10 @@ test/
 !examples/data.traj
 !examples/PbTe.in
 # tex info
-/docs/*
-!/docs/source/conf.py
-!/docs/source/*.rst
-!/docs/requiremets.txt
+/docs/**/*
+!/docs/requirements.txt
+!/docs/source/
+/docs/source/auto_examples/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

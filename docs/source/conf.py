@@ -41,6 +41,7 @@ extensions = [
     'recommonmark',
     'sphinx_markdown_tables',
     'sphinx_gallery.gen_gallery',
+    # 'sphinx-mathjax-offline',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -75,3 +76,8 @@ sphinx_gallery_conf = {
      #'filename_pattern': '/plot_',
      #'ignore_pattern': r'__init__\.py',
 }
+
+# Chinese mathjax cdn
+# mathjax_path = "//cdn.bootcdn.net/ajax/libs/mathjax/3.2.0/es5/a11y/assistive-mml.js"
+# local path
+mathjax_path = "mathjax/tex-chtml.js"

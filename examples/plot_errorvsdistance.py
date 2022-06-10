@@ -1,9 +1,10 @@
 """
 Relationship between error and latent distance
-===========================
+===============================================
+
 Distances in latent space does not provide an error estimate in the units of the 
-property being predicted. So we calibrate the error estimate by ftting the predictive variance to
- a simple conditional Gaussian distribution of the error similar to 
+property being predicted. So we calibrate the error estimate by ftting the predictive variance to 
+a simple conditional Gaussian distribution of the error similar to 
 `A quantitative uncertainty metric controls error in neural network-driven chemical discovery 
 <https://doi.org/10.1039/C9SC02298H>`_
 
@@ -46,8 +47,9 @@ d = np.array(d)           # min distances to trainset
 e = np.array(e)           # errors between nep and dft
 
 #%%
-# Here we suppose σ = a + b * d + c * d **2, and a, b, c > 0. 
-# Maximize N(e|0, σ) is same to minimize 2 * ln(σ) + d ** 2 / σ ** 2 
+# Here we suppose :math:`\sigma = a + b \cdot d + c \cdot d^2`, and a, b, c > 0. 
+# Maximize :math:`\mathcal{N}(\epsilon \vert 0, \sigma)` is same to minimize 
+# :math:`2 \cdot ln(\sigma) + d^2/\sigma^2` 
 
 def loss(args):
     a, b, c = args
