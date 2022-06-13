@@ -8,6 +8,7 @@ test/
 !examples/C_2022_NEP3.txt
 !examples/data.traj
 !examples/PbTe.in
+interface/lammps/USER-NEP/nep.*
 # tex info
 /docs/**/*
 !/docs/requirements.txt
