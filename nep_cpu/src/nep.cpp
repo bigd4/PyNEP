@@ -26,6 +26,8 @@ heat transport, Phys. Rev. B. 104, 104309 (2021).
 #include <iostream>
 #include <string>
 #include <vector>
+#include <iterator>
+#include <sstream>
 
 namespace
 {
@@ -1292,6 +1294,17 @@ void find_neighbor_list_small_box(
 
 } // namespace
 
+
+std::vector<std::string> get_tokens(std::ifstream& input)
+{
+  std::string line;
+  std::getline(input, line);
+  std::istringstream iss(line);
+  std::vector<std::string> tokens{
+    std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+  return tokens;
+}
+
 NEP3::NEP3()
 {
 }
@@ -1304,7 +1317,8 @@ NEP3::NEP3(const std::string& potential_filename)
     std::cout << "Cannot open " << potential_filename << "\n";
     exit(1);
   }
-
+  // std::vector<std::string> tokens = get_tokens(input_file);
+  // for (int i=0; i<tokens.size(); ++i) std::cout << tokens[i] << std::endl;
   std::string nep_name;
   input_file >> nep_name;
   if (nep_name == "nep") {
@@ -1340,8 +1354,17 @@ NEP3::NEP3(const std::string& potential_filename)
   if (zbl.enabled) {
     input_file >> name >> zbl.rc_inner >> zbl.rc_outer;
   }
+  
+  std::vector<std::string> tokens = get_tokens(input_file);
+  tokens = get_tokens(input_file);
+  if (tokens.size() != 3 && tokens.size() != 5) {
+    std::cout << "This line should be cutoff rc_radial rc_angular [MN_radial] [MN_angular].\n";
+    exit(1);
+  }
+  paramb.rc_radial = std::stof(tokens[1]);
+  paramb.rc_angular = std::stof(tokens[2]);
 
-  input_file >> name >> paramb.rc_radial >> paramb.rc_angular;
+  // input_file >> name >> paramb.rc_radial >> paramb.rc_angular;
   input_file >> name >> paramb.n_max_radial >> paramb.n_max_angular;
 
   if (paramb.version == 3) {
