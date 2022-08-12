@@ -38,6 +38,7 @@ def load_nep(filename):
                 symbols.append(line.split()[0])
                 positions.append(list(map(float, line.split()[1: 4])))
                 d['forces'].append(list(map(float, line.split()[4: 7])))
+            d['forces'] = np.array(d['forces'])
             atoms = Atoms(cell=cell, positions=positions, symbols=symbols, pbc=True)
             calc = SinglePointCalculator(atoms, **d)
             atoms.info.update(d)
