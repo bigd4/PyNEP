@@ -4,6 +4,7 @@ test/
 .vs
 .history
 .VSCodeCounter
+examples/*
 !examples/*.py
 !examples/C_2022_NEP3.txt
 !examples/data.traj
