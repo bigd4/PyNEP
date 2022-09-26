@@ -1,16 +1,16 @@
 /*
-    Copyright 2017 Zheyong Fan, Ville Vierimaa, Mikko Ervasti, and Ari Harju
-    This file is part of GPUMD.
-    GPUMD is free software: you can redistribute it and/or modify
+    Copyright 2022 Zheyong Fan, Junjie Wang, Eric Lindgren
+    This file is part of NEP_CPU.
+    NEP_CPU is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    GPUMD is distributed in the hope that it will be useful,
+    NEP_CPU is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
     You should have received a copy of the GNU General Public License
-    along with GPUMD.  If not, see <http://www.gnu.org/licenses/>.
+    along with NEP_CPU.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*----------------------------------------------------------------------------80
@@ -24,16 +24,19 @@ heat transport, Phys. Rev. B. 104, 104309 (2021).
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <vector>
 #include <iterator>
 #include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <vector>
 
 namespace
 {
-const int MN = 1000;       // maximum number of neighbors for one atom
-const int NUM_OF_ABC = 24; // 3 + 5 + 7 + 9 for L_max = 4
-const int MAX_NUM_N = 20;  // n_max+1 = 19+1
+const int MAX_NEURON = 200; // maximum number of neurons in the hidden layer
+const int MN = 1000;        // maximum number of neighbors for one atom
+const int NUM_OF_ABC = 24;  // 3 + 5 + 7 + 9 for L_max = 4
+const int MAX_NUM_N = 20;   // n_max+1 = 19+1
 const int MAX_DIM = MAX_NUM_N * 7;
 const int MAX_DIM_ANGULAR = MAX_NUM_N * 6;
 const double C3B[NUM_OF_ABC] = {
@@ -771,8 +774,8 @@ void find_descriptor_small_box(
   const bool calculating_potential,
   const bool calculating_descriptor,
   const bool calculating_latent_space,
-  NEP3::ParaMB paramb,
-  NEP3::ANN annmb,
+  NEP3::ParaMB& paramb,
+  NEP3::ANN& annmb,
   const int N,
   const int* g_NN_radial,
   const int* g_NL_radial,
@@ -880,9 +883,9 @@ void find_descriptor_small_box(
         q[d] = q[d] * paramb.q_scaler[d];
       }
 
-      double F = 0.0, Fp[MAX_DIM] = {0.0}, latent_space[100] = {0.0};
+      double F = 0.0, Fp[MAX_DIM] = {0.0}, latent_space[MAX_NEURON] = {0.0};
       apply_ann_one_layer(
-        annmb.dim, annmb.num_neurons1, annmb.w0, annmb.b0, annmb.w1, annmb.b1, q, F, Fp,
+        annmb.dim, annmb.num_neurons1, annmb.w0[t1], annmb.b0[t1], annmb.w1[t1], annmb.b1, q, F, Fp,
         latent_space);
 
       if (calculating_latent_space) {
@@ -903,8 +906,8 @@ void find_descriptor_small_box(
 }
 
 void find_force_radial_small_box(
-  NEP3::ParaMB paramb,
-  NEP3::ANN annmb,
+  NEP3::ParaMB& paramb,
+  NEP3::ANN& annmb,
   const int N,
   const int* g_NN,
   const int* g_NL,
@@ -967,22 +970,22 @@ void find_force_radial_small_box(
       g_fx[n2] -= f12[0];
       g_fy[n2] -= f12[1];
       g_fz[n2] -= f12[2];
-      g_virial[n1 + 0 * N] -= r12[0] * f12[0];
-      g_virial[n1 + 1 * N] -= r12[0] * f12[1];
-      g_virial[n1 + 2 * N] -= r12[0] * f12[2];
-      g_virial[n1 + 3 * N] -= r12[1] * f12[0];
-      g_virial[n1 + 4 * N] -= r12[1] * f12[1];
-      g_virial[n1 + 5 * N] -= r12[1] * f12[2];
-      g_virial[n1 + 6 * N] -= r12[2] * f12[0];
-      g_virial[n1 + 7 * N] -= r12[2] * f12[1];
-      g_virial[n1 + 8 * N] -= r12[2] * f12[2];
+      g_virial[n2 + 0 * N] -= r12[0] * f12[0];
+      g_virial[n2 + 1 * N] -= r12[0] * f12[1];
+      g_virial[n2 + 2 * N] -= r12[0] * f12[2];
+      g_virial[n2 + 3 * N] -= r12[1] * f12[0];
+      g_virial[n2 + 4 * N] -= r12[1] * f12[1];
+      g_virial[n2 + 5 * N] -= r12[1] * f12[2];
+      g_virial[n2 + 6 * N] -= r12[2] * f12[0];
+      g_virial[n2 + 7 * N] -= r12[2] * f12[1];
+      g_virial[n2 + 8 * N] -= r12[2] * f12[2];
     }
   }
 }
 
 void find_force_angular_small_box(
-  NEP3::ParaMB paramb,
-  NEP3::ANN annmb,
+  NEP3::ParaMB& paramb,
+  NEP3::ANN& annmb,
   const int N,
   const int* g_NN_angular,
   const int* g_NL_angular,
@@ -1065,22 +1068,22 @@ void find_force_angular_small_box(
       g_fx[n2] -= f12[0];
       g_fy[n2] -= f12[1];
       g_fz[n2] -= f12[2];
-      g_virial[n1 + 0 * N] -= r12[0] * f12[0];
-      g_virial[n1 + 1 * N] -= r12[0] * f12[1];
-      g_virial[n1 + 2 * N] -= r12[0] * f12[2];
-      g_virial[n1 + 3 * N] -= r12[1] * f12[0];
-      g_virial[n1 + 4 * N] -= r12[1] * f12[1];
-      g_virial[n1 + 5 * N] -= r12[1] * f12[2];
-      g_virial[n1 + 6 * N] -= r12[2] * f12[0];
-      g_virial[n1 + 7 * N] -= r12[2] * f12[1];
-      g_virial[n1 + 8 * N] -= r12[2] * f12[2];
+      g_virial[n2 + 0 * N] -= r12[0] * f12[0];
+      g_virial[n2 + 1 * N] -= r12[0] * f12[1];
+      g_virial[n2 + 2 * N] -= r12[0] * f12[2];
+      g_virial[n2 + 3 * N] -= r12[1] * f12[0];
+      g_virial[n2 + 4 * N] -= r12[1] * f12[1];
+      g_virial[n2 + 5 * N] -= r12[1] * f12[2];
+      g_virial[n2 + 6 * N] -= r12[2] * f12[0];
+      g_virial[n2 + 7 * N] -= r12[2] * f12[1];
+      g_virial[n2 + 8 * N] -= r12[2] * f12[2];
     }
   }
 }
 
 void find_force_ZBL_small_box(
   const int N,
-  const NEP3::ZBL zbl,
+  const NEP3::ZBL& zbl,
   const int* g_NN,
   const int* g_NL,
   const int* g_type,
@@ -1115,16 +1118,415 @@ void find_force_ZBL_small_box(
       g_fx[n2] -= f12[0];
       g_fy[n2] -= f12[1];
       g_fz[n2] -= f12[2];
-      g_virial[n1 + 0 * N] -= r12[0] * f12[0];
-      g_virial[n1 + 1 * N] -= r12[0] * f12[1];
-      g_virial[n1 + 2 * N] -= r12[0] * f12[2];
-      g_virial[n1 + 3 * N] -= r12[1] * f12[0];
-      g_virial[n1 + 4 * N] -= r12[1] * f12[1];
-      g_virial[n1 + 5 * N] -= r12[1] * f12[2];
-      g_virial[n1 + 6 * N] -= r12[2] * f12[0];
-      g_virial[n1 + 7 * N] -= r12[2] * f12[1];
-      g_virial[n1 + 8 * N] -= r12[2] * f12[2];
+      g_virial[n2 + 0 * N] -= r12[0] * f12[0];
+      g_virial[n2 + 1 * N] -= r12[0] * f12[1];
+      g_virial[n2 + 2 * N] -= r12[0] * f12[2];
+      g_virial[n2 + 3 * N] -= r12[1] * f12[0];
+      g_virial[n2 + 4 * N] -= r12[1] * f12[1];
+      g_virial[n2 + 5 * N] -= r12[1] * f12[2];
+      g_virial[n2 + 6 * N] -= r12[2] * f12[0];
+      g_virial[n2 + 7 * N] -= r12[2] * f12[1];
+      g_virial[n2 + 8 * N] -= r12[2] * f12[2];
       g_pe[n1] += f * 0.5;
+    }
+  }
+}
+
+void find_descriptor_for_lammps(
+  NEP3::ParaMB& paramb,
+  NEP3::ANN& annmb,
+  int N,
+  int* g_ilist,
+  int* g_NN,
+  int** g_NL,
+  int* g_type,
+  double** g_pos,
+  double* g_Fp,
+  double* g_sum_fxyz,
+  double& g_total_potential,
+  double* g_potential)
+{
+  for (int ii = 0; ii < N; ++ii) {
+    int n1 = g_ilist[ii];
+    int t1 = g_type[n1] - 1; // from LAMMPS to NEP convention
+    double q[MAX_DIM] = {0.0};
+
+    for (int i1 = 0; i1 < g_NN[n1]; ++i1) {
+      int n2 = g_NL[n1][i1];
+      double r12[3] = {
+        g_pos[n2][0] - g_pos[n1][0], g_pos[n2][1] - g_pos[n1][1], g_pos[n2][2] - g_pos[n1][2]};
+
+      double d12sq = r12[0] * r12[0] + r12[1] * r12[1] + r12[2] * r12[2];
+      if (d12sq >= paramb.rc_radial * paramb.rc_radial) {
+        continue;
+      }
+      double d12 = sqrt(d12sq);
+
+      double fc12;
+      find_fc(paramb.rc_radial, paramb.rcinv_radial, d12, fc12);
+      int t2 = g_type[n2] - 1; // from LAMMPS to NEP convention
+      double fn12[MAX_NUM_N];
+      if (paramb.version == 2) {
+        find_fn(paramb.n_max_radial, paramb.rcinv_radial, d12, fc12, fn12);
+        for (int n = 0; n <= paramb.n_max_radial; ++n) {
+          double c = (paramb.num_types == 1)
+                       ? 1.0
+                       : annmb.c[(n * paramb.num_types + t1) * paramb.num_types + t2];
+          q[n] += fn12[n] * c;
+        }
+      } else {
+        find_fn(paramb.basis_size_radial, paramb.rcinv_radial, d12, fc12, fn12);
+        for (int n = 0; n <= paramb.n_max_radial; ++n) {
+          double gn12 = 0.0;
+          for (int k = 0; k <= paramb.basis_size_radial; ++k) {
+            int c_index = (n * (paramb.basis_size_radial + 1) + k) * paramb.num_types_sq;
+            c_index += t1 * paramb.num_types + t2;
+            gn12 += fn12[k] * annmb.c[c_index];
+          }
+          q[n] += gn12;
+        }
+      }
+    }
+
+    for (int n = 0; n <= paramb.n_max_angular; ++n) {
+      double s[NUM_OF_ABC] = {0.0};
+      for (int i1 = 0; i1 < g_NN[n1]; ++i1) {
+        int n2 = g_NL[n1][i1];
+        double r12[3] = {
+          g_pos[n2][0] - g_pos[n1][0], g_pos[n2][1] - g_pos[n1][1], g_pos[n2][2] - g_pos[n1][2]};
+
+        double d12sq = r12[0] * r12[0] + r12[1] * r12[1] + r12[2] * r12[2];
+        if (d12sq >= paramb.rc_angular * paramb.rc_angular) {
+          continue;
+        }
+        double d12 = sqrt(d12sq);
+
+        double fc12;
+        find_fc(paramb.rc_angular, paramb.rcinv_angular, d12, fc12);
+        int t2 = g_type[n2] - 1; // from LAMMPS to NEP convention
+        if (paramb.version == 2) {
+          double fn;
+          find_fn(n, paramb.rcinv_angular, d12, fc12, fn);
+          fn *=
+            (paramb.num_types == 1)
+              ? 1.0
+              : annmb.c
+                  [((paramb.n_max_radial + 1 + n) * paramb.num_types + t1) * paramb.num_types + t2];
+          accumulate_s(d12, r12[0], r12[1], r12[2], fn, s);
+        } else {
+          double fn12[MAX_NUM_N];
+          find_fn(paramb.basis_size_angular, paramb.rcinv_angular, d12, fc12, fn12);
+          double gn12 = 0.0;
+          for (int k = 0; k <= paramb.basis_size_angular; ++k) {
+            int c_index = (n * (paramb.basis_size_angular + 1) + k) * paramb.num_types_sq;
+            c_index += t1 * paramb.num_types + t2 + paramb.num_c_radial;
+            gn12 += fn12[k] * annmb.c[c_index];
+          }
+          accumulate_s(d12, r12[0], r12[1], r12[2], gn12, s);
+        }
+      }
+      if (paramb.num_L == paramb.L_max) {
+        find_q(paramb.n_max_angular + 1, n, s, q + (paramb.n_max_radial + 1));
+      } else if (paramb.num_L == paramb.L_max + 1) {
+        find_q_with_4body(paramb.n_max_angular + 1, n, s, q + (paramb.n_max_radial + 1));
+      } else {
+        find_q_with_5body(paramb.n_max_angular + 1, n, s, q + (paramb.n_max_radial + 1));
+      }
+      for (int abc = 0; abc < NUM_OF_ABC; ++abc) {
+        g_sum_fxyz[(n * NUM_OF_ABC + abc) * N + n1] = s[abc];
+      }
+    }
+
+    for (int d = 0; d < annmb.dim; ++d) {
+      q[d] = q[d] * paramb.q_scaler[d];
+    }
+
+    double F = 0.0, Fp[MAX_DIM] = {0.0}, latent_space[MAX_NEURON] = {0.0};
+    apply_ann_one_layer(
+      annmb.dim, annmb.num_neurons1, annmb.w0[t1], annmb.b0[t1], annmb.w1[t1], annmb.b1, q, F, Fp,
+      latent_space);
+
+    g_total_potential += F; // always calculate this
+    if (g_potential) {      // only calculate when required
+      g_potential[n1] += F;
+    }
+
+    for (int d = 0; d < annmb.dim; ++d) {
+      g_Fp[d * N + n1] = Fp[d] * paramb.q_scaler[d];
+    }
+  }
+}
+
+void find_force_radial_for_lammps(
+  NEP3::ParaMB& paramb,
+  NEP3::ANN& annmb,
+  int N,
+  int* g_ilist,
+  int* g_NN,
+  int** g_NL,
+  int* g_type,
+  double** g_pos,
+  double* g_Fp,
+  double** g_force,
+  double g_total_virial[6],
+  double** g_virial)
+{
+  for (int ii = 0; ii < N; ++ii) {
+    int n1 = g_ilist[ii];
+    int t1 = g_type[n1] - 1; // from LAMMPS to NEP convention
+    for (int i1 = 0; i1 < g_NN[n1]; ++i1) {
+      int n2 = g_NL[n1][i1];
+      int t2 = g_type[n2] - 1; // from LAMMPS to NEP convention
+      double r12[3] = {
+        g_pos[n2][0] - g_pos[n1][0], g_pos[n2][1] - g_pos[n1][1], g_pos[n2][2] - g_pos[n1][2]};
+
+      double d12sq = r12[0] * r12[0] + r12[1] * r12[1] + r12[2] * r12[2];
+      if (d12sq >= paramb.rc_radial * paramb.rc_radial) {
+        continue;
+      }
+      double d12 = sqrt(d12sq);
+
+      double d12inv = 1.0 / d12;
+      double fc12, fcp12;
+      find_fc_and_fcp(paramb.rc_radial, paramb.rcinv_radial, d12, fc12, fcp12);
+      double fn12[MAX_NUM_N];
+      double fnp12[MAX_NUM_N];
+
+      double f12[3] = {0.0};
+      if (paramb.version == 2) {
+        find_fn_and_fnp(paramb.n_max_radial, paramb.rcinv_radial, d12, fc12, fcp12, fn12, fnp12);
+        for (int n = 0; n <= paramb.n_max_radial; ++n) {
+          double tmp12 = g_Fp[n1 + n * N] * fnp12[n] * d12inv;
+          tmp12 *= (paramb.num_types == 1)
+                     ? 1.0
+                     : annmb.c[(n * paramb.num_types + t1) * paramb.num_types + t2];
+          for (int d = 0; d < 3; ++d) {
+            f12[d] += tmp12 * r12[d];
+          }
+        }
+      } else {
+        find_fn_and_fnp(
+          paramb.basis_size_radial, paramb.rcinv_radial, d12, fc12, fcp12, fn12, fnp12);
+        for (int n = 0; n <= paramb.n_max_radial; ++n) {
+          double gnp12 = 0.0;
+          for (int k = 0; k <= paramb.basis_size_radial; ++k) {
+            int c_index = (n * (paramb.basis_size_radial + 1) + k) * paramb.num_types_sq;
+            c_index += t1 * paramb.num_types + t2;
+            gnp12 += fnp12[k] * annmb.c[c_index];
+          }
+          double tmp12 = g_Fp[n1 + n * N] * gnp12 * d12inv;
+          for (int d = 0; d < 3; ++d) {
+            f12[d] += tmp12 * r12[d];
+          }
+        }
+      }
+
+      g_force[n1][0] += f12[0];
+      g_force[n1][1] += f12[1];
+      g_force[n1][2] += f12[2];
+      g_force[n2][0] -= f12[0];
+      g_force[n2][1] -= f12[1];
+      g_force[n2][2] -= f12[2];
+
+      // always calculate the total virial:
+      g_total_virial[0] -= r12[0] * f12[0]; // xx
+      g_total_virial[1] -= r12[1] * f12[1]; // yy
+      g_total_virial[2] -= r12[2] * f12[2]; // zz
+      g_total_virial[3] -= r12[0] * f12[1]; // xy
+      g_total_virial[4] -= r12[0] * f12[2]; // xz
+      g_total_virial[5] -= r12[1] * f12[2]; // yz
+      if (g_virial) {                       // only calculate the per-atom virial when required
+        g_virial[n2][0] -= r12[0] * f12[0]; // xx
+        g_virial[n2][1] -= r12[1] * f12[1]; // yy
+        g_virial[n2][2] -= r12[2] * f12[2]; // zz
+        g_virial[n2][3] -= r12[0] * f12[1]; // xy
+        g_virial[n2][4] -= r12[0] * f12[2]; // xz
+        g_virial[n2][5] -= r12[1] * f12[2]; // yz
+        g_virial[n2][6] -= r12[1] * f12[0]; // yx
+        g_virial[n2][7] -= r12[2] * f12[0]; // zx
+        g_virial[n2][8] -= r12[2] * f12[1]; // zy
+      }
+    }
+  }
+}
+
+void find_force_angular_for_lammps(
+  NEP3::ParaMB& paramb,
+  NEP3::ANN& annmb,
+  int N,
+  int* g_ilist,
+  int* g_NN,
+  int** g_NL,
+  int* g_type,
+  double** g_pos,
+  double* g_Fp,
+  double* g_sum_fxyz,
+  double** g_force,
+  double g_total_virial[6],
+  double** g_virial)
+{
+  for (int ii = 0; ii < N; ++ii) {
+    int n1 = g_ilist[ii];
+    double Fp[MAX_DIM_ANGULAR] = {0.0};
+    double sum_fxyz[NUM_OF_ABC * MAX_NUM_N];
+    for (int d = 0; d < paramb.dim_angular; ++d) {
+      Fp[d] = g_Fp[(paramb.n_max_radial + 1 + d) * N + n1];
+    }
+    for (int d = 0; d < (paramb.n_max_angular + 1) * NUM_OF_ABC; ++d) {
+      sum_fxyz[d] = g_sum_fxyz[d * N + n1];
+    }
+
+    int t1 = g_type[n1] - 1; // from LAMMPS to NEP convention
+
+    for (int i1 = 0; i1 < g_NN[n1]; ++i1) {
+      int n2 = g_NL[n1][i1];
+      double r12[3] = {
+        g_pos[n2][0] - g_pos[n1][0], g_pos[n2][1] - g_pos[n1][1], g_pos[n2][2] - g_pos[n1][2]};
+
+      double d12sq = r12[0] * r12[0] + r12[1] * r12[1] + r12[2] * r12[2];
+      if (d12sq >= paramb.rc_angular * paramb.rc_angular) {
+        continue;
+      }
+      double d12 = sqrt(d12sq);
+
+      double fc12, fcp12;
+      find_fc_and_fcp(paramb.rc_angular, paramb.rcinv_angular, d12, fc12, fcp12);
+      int t2 = g_type[n2] - 1; // from LAMMPS to NEP convention
+      double f12[3] = {0.0};
+
+      if (paramb.version == 2) {
+        for (int n = 0; n <= paramb.n_max_angular; ++n) {
+          double fn;
+          double fnp;
+          find_fn_and_fnp(n, paramb.rcinv_angular, d12, fc12, fcp12, fn, fnp);
+          const double c =
+            (paramb.num_types == 1)
+              ? 1.0
+              : annmb.c
+                  [((paramb.n_max_radial + 1 + n) * paramb.num_types + t1) * paramb.num_types + t2];
+          fn *= c;
+          fnp *= c;
+          accumulate_f12(n, paramb.n_max_angular + 1, d12, r12, fn, fnp, Fp, sum_fxyz, f12);
+        }
+      } else {
+        double fn12[MAX_NUM_N];
+        double fnp12[MAX_NUM_N];
+        find_fn_and_fnp(
+          paramb.basis_size_angular, paramb.rcinv_angular, d12, fc12, fcp12, fn12, fnp12);
+        for (int n = 0; n <= paramb.n_max_angular; ++n) {
+          double gn12 = 0.0;
+          double gnp12 = 0.0;
+          for (int k = 0; k <= paramb.basis_size_angular; ++k) {
+            int c_index = (n * (paramb.basis_size_angular + 1) + k) * paramb.num_types_sq;
+            c_index += t1 * paramb.num_types + t2 + paramb.num_c_radial;
+            gn12 += fn12[k] * annmb.c[c_index];
+            gnp12 += fnp12[k] * annmb.c[c_index];
+          }
+          if (paramb.num_L == paramb.L_max) {
+            accumulate_f12(n, paramb.n_max_angular + 1, d12, r12, gn12, gnp12, Fp, sum_fxyz, f12);
+          } else if (paramb.num_L == paramb.L_max + 1) {
+            accumulate_f12_with_4body(
+              n, paramb.n_max_angular + 1, d12, r12, gn12, gnp12, Fp, sum_fxyz, f12);
+          } else {
+            accumulate_f12_with_5body(
+              n, paramb.n_max_angular + 1, d12, r12, gn12, gnp12, Fp, sum_fxyz, f12);
+          }
+        }
+      }
+
+      g_force[n1][0] += f12[0];
+      g_force[n1][1] += f12[1];
+      g_force[n1][2] += f12[2];
+      g_force[n2][0] -= f12[0];
+      g_force[n2][1] -= f12[1];
+      g_force[n2][2] -= f12[2];
+      // always calculate the total virial:
+      g_total_virial[0] -= r12[0] * f12[0]; // xx
+      g_total_virial[1] -= r12[1] * f12[1]; // yy
+      g_total_virial[2] -= r12[2] * f12[2]; // zz
+      g_total_virial[3] -= r12[0] * f12[1]; // xy
+      g_total_virial[4] -= r12[0] * f12[2]; // xz
+      g_total_virial[5] -= r12[1] * f12[2]; // yz
+      if (g_virial) {                       // only calculate the per-atom virial when required
+        g_virial[n2][0] -= r12[0] * f12[0]; // xx
+        g_virial[n2][1] -= r12[1] * f12[1]; // yy
+        g_virial[n2][2] -= r12[2] * f12[2]; // zz
+        g_virial[n2][3] -= r12[0] * f12[1]; // xy
+        g_virial[n2][4] -= r12[0] * f12[2]; // xz
+        g_virial[n2][5] -= r12[1] * f12[2]; // yz
+        g_virial[n2][6] -= r12[1] * f12[0]; // yx
+        g_virial[n2][7] -= r12[2] * f12[0]; // zx
+        g_virial[n2][8] -= r12[2] * f12[1]; // zy
+      }
+    }
+  }
+}
+
+void find_force_ZBL_for_lammps(
+  const NEP3::ZBL& zbl,
+  int N,
+  int* g_ilist,
+  int* g_NN,
+  int** g_NL,
+  int* g_type,
+  double** g_pos,
+  double** g_force,
+  double g_total_virial[6],
+  double** g_virial,
+  double& g_total_potential,
+  double* g_potential)
+{
+  for (int ii = 0; ii < N; ++ii) {
+    int n1 = g_ilist[ii];
+    double zi = zbl.atomic_numbers[g_type[n1] - 1]; // from LAMMPS to NEP convention
+    double pow_zi = pow(zi, 0.23);
+    for (int i1 = 0; i1 < g_NN[n1]; ++i1) {
+      int n2 = g_NL[n1][i1];
+      double r12[3] = {
+        g_pos[n2][0] - g_pos[n1][0], g_pos[n2][1] - g_pos[n1][1], g_pos[n2][2] - g_pos[n1][2]};
+
+      double d12sq = r12[0] * r12[0] + r12[1] * r12[1] + r12[2] * r12[2];
+      if (d12sq >= zbl.rc_outer * zbl.rc_outer) {
+        continue;
+      }
+      double d12 = sqrt(d12sq);
+
+      double d12inv = 1.0 / d12;
+      double f, fp;
+      double zj = zbl.atomic_numbers[g_type[n2] - 1]; // from LAMMPS to NEP convention
+      double a_inv = (pow_zi + pow(zj, 0.23)) * 2.134563;
+      double zizj = K_C_SP * zi * zj;
+      find_f_and_fp_zbl(zizj, a_inv, zbl.rc_inner, zbl.rc_outer, d12, d12inv, f, fp);
+      double f2 = fp * d12inv * 0.5;
+      double f12[3] = {r12[0] * f2, r12[1] * f2, r12[2] * f2};
+      g_force[n1][0] += f12[0]; // accumulation here
+      g_force[n1][1] += f12[1];
+      g_force[n1][2] += f12[2];
+      g_force[n2][0] -= f12[0];
+      g_force[n2][1] -= f12[1];
+      g_force[n2][2] -= f12[2];
+      // always calculate the total virial:
+      g_total_virial[0] -= r12[0] * f12[0]; // xx
+      g_total_virial[1] -= r12[1] * f12[1]; // yy
+      g_total_virial[2] -= r12[2] * f12[2]; // zz
+      g_total_virial[3] -= r12[0] * f12[1]; // xy
+      g_total_virial[4] -= r12[0] * f12[2]; // xz
+      g_total_virial[5] -= r12[1] * f12[2]; // yz
+      if (g_virial) {                       // only calculate the per-atom virial when required
+        g_virial[n2][0] -= r12[0] * f12[0]; // xx
+        g_virial[n2][1] -= r12[1] * f12[1]; // yy
+        g_virial[n2][2] -= r12[2] * f12[2]; // zz
+        g_virial[n2][3] -= r12[0] * f12[1]; // xy
+        g_virial[n2][4] -= r12[0] * f12[2]; // xz
+        g_virial[n2][5] -= r12[1] * f12[2]; // yz
+        g_virial[n2][6] -= r12[1] * f12[0]; // yx
+        g_virial[n2][7] -= r12[2] * f12[0]; // zx
+        g_virial[n2][8] -= r12[2] * f12[1]; // zy
+      }
+      g_total_potential += f * 0.5; // always calculate this
+      if (g_potential) {            // only calculate when required
+        g_potential[n1] += f * 0.5;
+      }
     }
   }
 }
@@ -1202,14 +1604,22 @@ void get_expanded_box(const double rc, const double* box, int* num_cells, double
   get_inverse(ebox);
 }
 
+void applyMicOne(double& x12)
+{
+  if (x12 < -0.5)
+    x12 += 1.0;
+  else if (x12 > +0.5)
+    x12 -= 1.0;
+}
+
 void apply_mic_small_box(const double* ebox, double& x12, double& y12, double& z12)
 {
   double sx12 = ebox[9] * x12 + ebox[10] * y12 + ebox[11] * z12;
   double sy12 = ebox[12] * x12 + ebox[13] * y12 + ebox[14] * z12;
   double sz12 = ebox[15] * x12 + ebox[16] * y12 + ebox[17] * z12;
-  sx12 -= nearbyint(sx12);
-  sy12 -= nearbyint(sy12);
-  sz12 -= nearbyint(sz12);
+  applyMicOne(sx12);
+  applyMicOne(sy12);
+  applyMicOne(sz12);
   x12 = ebox[0] * sx12 + ebox[1] * sy12 + ebox[2] * sz12;
   y12 = ebox[3] * sx12 + ebox[4] * sy12 + ebox[5] * sz12;
   z12 = ebox[6] * sx12 + ebox[7] * sy12 + ebox[8] * sz12;
@@ -1231,7 +1641,6 @@ void find_neighbor_list_small_box(
 {
   get_expanded_box(rc_radial, box.data(), num_cells, ebox);
 
-  // const int size_x12 = g_NL_radial.size();
   const int size_x12 = N * MN;
   const double* g_x = position.data();
   const double* g_y = position.data() + N;
@@ -1292,9 +1701,6 @@ void find_neighbor_list_small_box(
   }
 }
 
-} // namespace
-
-
 std::vector<std::string> get_tokens(std::ifstream& input)
 {
   std::string line;
@@ -1305,132 +1711,262 @@ std::vector<std::string> get_tokens(std::ifstream& input)
   return tokens;
 }
 
-NEP3::NEP3()
+int get_int_from_token(const std::string& token, const char* filename, const int line)
 {
-}
-
-NEP3::NEP3(const std::string& potential_filename)
-{
-  std::ifstream input_file(potential_filename);
-
-  if (!input_file.is_open()) {
-    std::cout << "Cannot open " << potential_filename << "\n";
+  int value = 0;
+  try {
+    value = std::stoi(token);
+  } catch (const std::exception& e) {
+    std::cout << "Standard exception:\n";
+    std::cout << "    File:          " << filename << std::endl;
+    std::cout << "    Line:          " << line << std::endl;
+    std::cout << "    Error message: " << e.what() << std::endl;
     exit(1);
   }
-  // std::vector<std::string> tokens = get_tokens(input_file);
-  // for (int i=0; i<tokens.size(); ++i) std::cout << tokens[i] << std::endl;
-  std::string nep_name;
-  input_file >> nep_name;
-  if (nep_name == "nep") {
-    paramb.version = 2;
-    zbl.enabled = false;
-  } else if (nep_name == "nep_zbl") {
-    paramb.version = 2;
-    zbl.enabled = true;
-  } else if (nep_name == "nep3") {
-    paramb.version = 3;
-    zbl.enabled = false;
-  } else if (nep_name == "nep3_zbl") {
-    paramb.version = 3;
-    zbl.enabled = true;
+  return value;
+}
+
+double get_double_from_token(const std::string& token, const char* filename, const int line)
+{
+  double value = 0;
+  try {
+    value = std::stod(token);
+  } catch (const std::exception& e) {
+    std::cout << "Standard exception:\n";
+    std::cout << "    File:          " << filename << std::endl;
+    std::cout << "    Line:          " << line << std::endl;
+    std::cout << "    Error message: " << e.what() << std::endl;
+    exit(1);
+  }
+  return value;
+}
+
+} // namespace
+
+NEP3::NEP3() {}
+
+NEP3::NEP3(const std::string& potential_filename) { init_from_file(potential_filename, true); }
+
+void NEP3::init_from_file(const std::string& potential_filename, const bool is_rank_0)
+{
+  std::ifstream input(potential_filename);
+  if (!input.is_open()) {
+    std::cout << "Failed to open " << potential_filename << std::endl;
+    exit(1);
   }
 
-  input_file >> paramb.num_types;
-
-  char name[20];
+  // nep3 1 C
+  std::vector<std::string> tokens = get_tokens(input);
+  if (tokens.size() < 3) {
+    std::cout << "The first line of nep.txt should have at least 3 items." << std::endl;
+    exit(1);
+  }
+  if (tokens[0] == "nep") {
+    paramb.version = 2;
+    zbl.enabled = false;
+  } else if (tokens[0] == "nep3") {
+    paramb.version = 3;
+    zbl.enabled = false;
+  } else if (tokens[0] == "nep_zbl") {
+    paramb.version = 2;
+    zbl.enabled = true;
+  } else if (tokens[0] == "nep3_zbl") {
+    paramb.version = 3;
+    zbl.enabled = true;
+  } else if (tokens[0] == "nep4") {
+    paramb.version = 4;
+    zbl.enabled = false;
+  } else if (tokens[0] == "nep4_zbl") {
+    paramb.version = 4;
+    zbl.enabled = true;
+  }
+  paramb.num_types = get_int_from_token(tokens[1], __FILE__, __LINE__);
+  if (tokens.size() != 2 + paramb.num_types) {
+    std::cout << "The first line of nep.txt should have " << paramb.num_types << " atom symbols."
+              << std::endl;
+    exit(1);
+  }
+  
   element_list.resize(paramb.num_types);
   for (int n = 0; n < paramb.num_types; ++n) {
-    input_file >> element_list[n];
     int atomic_number = 0;
+    element_list[n] = tokens[2 + n];
     for (int m = 0; m < NUM_ELEMENTS; ++m) {
-      if (element_list[n] == ELEMENTS[m]) {
+      if (tokens[2 + n] == ELEMENTS[m]) {
         atomic_number = m + 1;
         break;
       }
     }
     zbl.atomic_numbers[n] = atomic_number;
   }
-  
+
+  // zbl 0.7 1.4
   if (zbl.enabled) {
-    input_file >> name >> zbl.rc_inner >> zbl.rc_outer;
+    tokens = get_tokens(input);
+    if (tokens.size() != 3) {
+      std::cout << "This line should be zbl rc_inner rc_outer." << std::endl;
+      exit(1);
+    }
+    zbl.rc_inner = get_double_from_token(tokens[1], __FILE__, __LINE__);
+    zbl.rc_outer = get_double_from_token(tokens[2], __FILE__, __LINE__);
   }
-  
-  std::vector<std::string> tokens = get_tokens(input_file);
-  tokens = get_tokens(input_file);
+
+  // cutoff 4.2 3.7 80 47
+  tokens = get_tokens(input);
   if (tokens.size() != 3 && tokens.size() != 5) {
     std::cout << "This line should be cutoff rc_radial rc_angular [MN_radial] [MN_angular].\n";
     exit(1);
   }
-  paramb.rc_radial = std::stof(tokens[1]);
-  paramb.rc_angular = std::stof(tokens[2]);
+  paramb.rc_radial = get_double_from_token(tokens[1], __FILE__, __LINE__);
+  paramb.rc_angular = get_double_from_token(tokens[2], __FILE__, __LINE__);
 
-  // input_file >> name >> paramb.rc_radial >> paramb.rc_angular;
-  input_file >> name >> paramb.n_max_radial >> paramb.n_max_angular;
+  // n_max 10 8
+  tokens = get_tokens(input);
+  if (tokens.size() != 3) {
+    std::cout << "This line should be n_max n_max_radial n_max_angular." << std::endl;
+    exit(1);
+  }
+  paramb.n_max_radial = get_int_from_token(tokens[1], __FILE__, __LINE__);
+  paramb.n_max_angular = get_int_from_token(tokens[2], __FILE__, __LINE__);
 
-  if (paramb.version == 3) {
-    input_file >> name >> paramb.basis_size_radial >> paramb.basis_size_angular;
+  // basis_size 10 8
+  if (paramb.version >= 3) {
+    tokens = get_tokens(input);
+    if (tokens.size() != 3) {
+      std::cout << "This line should be basis_size basis_size_radial basis_size_angular."
+                << std::endl;
+      exit(1);
+    }
+    paramb.basis_size_radial = get_int_from_token(tokens[1], __FILE__, __LINE__);
+    paramb.basis_size_angular = get_int_from_token(tokens[2], __FILE__, __LINE__);
   }
 
+  // l_max
+  tokens = get_tokens(input);
   if (paramb.version == 2) {
-    input_file >> name >> paramb.L_max;
+    if (tokens.size() != 2) {
+      std::cout << "This line should be l_max l_max_3body." << std::endl;
+      exit(1);
+    }
   } else {
-    input_file >> name >> paramb.L_max >> paramb.L_max_4body >> paramb.L_max_5body;
+    if (tokens.size() != 4) {
+      std::cout << "This line should be l_max l_max_3body l_max_4body l_max_5body." << std::endl;
+      exit(1);
+    }
   }
 
+  paramb.L_max = get_int_from_token(tokens[1], __FILE__, __LINE__);
   paramb.num_L = paramb.L_max;
-  if (paramb.version == 3) {
-    if (paramb.L_max_4body == 2) {
+
+  if (paramb.version >= 3) {
+    int L_max_4body = get_int_from_token(tokens[2], __FILE__, __LINE__);
+    int L_max_5body = get_int_from_token(tokens[3], __FILE__, __LINE__);
+    if (L_max_4body == 2) {
       paramb.num_L += 1;
     }
-    if (paramb.L_max_5body == 1) {
+    if (L_max_5body == 1) {
       paramb.num_L += 1;
     }
   }
+
   paramb.dim_angular = (paramb.n_max_angular + 1) * paramb.num_L;
 
-  int num_neurons2;
-  input_file >> name >> annmb.num_neurons1 >> num_neurons2;
+  // ANN
+  tokens = get_tokens(input);
+  if (tokens.size() != 3) {
+    std::cout << "This line should be ANN num_neurons 0." << std::endl;
+    exit(1);
+  }
+  annmb.num_neurons1 = get_int_from_token(tokens[1], __FILE__, __LINE__);
+  annmb.dim = (paramb.n_max_radial + 1) + paramb.dim_angular;
 
-  paramb.rcinv_radial = 1.0 / paramb.rc_radial;
-  paramb.rcinv_angular = 1.0 / paramb.rc_angular;
-  annmb.dim = (paramb.n_max_radial + 1) + (paramb.n_max_angular + 1) * paramb.num_L;
-
-  annmb.num_para = (annmb.dim + 2) * annmb.num_neurons1 + 1;
-  int num_para_descriptor = paramb.num_types * paramb.num_types *
-                            ((paramb.n_max_radial + 1) * (paramb.basis_size_radial + 1) +
-                             (paramb.n_max_angular + 1) * (paramb.basis_size_angular + 1));
+  // calculated parameters:
+  paramb.rcinv_radial = 1.0f / paramb.rc_radial;
+  paramb.rcinv_angular = 1.0f / paramb.rc_angular;
+  paramb.num_types_sq = paramb.num_types * paramb.num_types;
+  annmb.num_para =
+    (annmb.dim + 2) * annmb.num_neurons1 * (paramb.version == 4 ? paramb.num_types : 1) + 1;
+  int num_para_descriptor =
+    paramb.num_types_sq * ((paramb.n_max_radial + 1) * (paramb.basis_size_radial + 1) +
+                           (paramb.n_max_angular + 1) * (paramb.basis_size_angular + 1));
   if (paramb.version == 2) {
     num_para_descriptor =
       (paramb.num_types == 1)
         ? 0
-        : paramb.num_types * paramb.num_types * (paramb.n_max_radial + paramb.n_max_angular + 2);
+        : paramb.num_types_sq * (paramb.n_max_radial + paramb.n_max_angular + 2);
   }
   annmb.num_para += num_para_descriptor;
 
-  paramb.num_types_sq = paramb.num_types * paramb.num_types;
   paramb.num_c_radial =
     paramb.num_types_sq * (paramb.n_max_radial + 1) * (paramb.basis_size_radial + 1);
 
+  // NN and descriptor parameters
   parameters.resize(annmb.num_para);
-
   for (int n = 0; n < annmb.num_para; ++n) {
-    input_file >> parameters[n];
+    tokens = get_tokens(input);
+    parameters[n] = get_double_from_token(tokens[0], __FILE__, __LINE__);
   }
   update_potential(parameters.data(), annmb);
-
   for (int d = 0; d < annmb.dim; ++d) {
-    input_file >> paramb.q_scaler[d];
+    tokens = get_tokens(input);
+    paramb.q_scaler[d] = get_double_from_token(tokens[0], __FILE__, __LINE__);
   }
 
-  input_file.close();
+  input.close();
+
+  // only report for rank_0
+  if (is_rank_0) {
+
+    if (paramb.num_types == 1) {
+      std::cout << "Use the NEP" << paramb.version << " potential with " << paramb.num_types
+                << " atom type.\n";
+    } else {
+      std::cout << "Use the NEP" << paramb.version << " potential with " << paramb.num_types
+                << " atom types.\n";
+    }
+
+    for (int n = 0; n < paramb.num_types; ++n) {
+      std::cout << "    type " << n << "( " << element_list[n] << " with Z = " << zbl.atomic_numbers[n] << ").\n";
+    }
+
+    if (zbl.enabled) {
+      std::cout << "    has ZBL with inner cutoff " << zbl.rc_inner << " A and outer cutoff "
+                << zbl.rc_outer << " A.\n";
+    }
+    std::cout << "    radial cutoff = " << paramb.rc_radial << " A.\n";
+    std::cout << "    angular cutoff = " << paramb.rc_angular << " A.\n";
+    std::cout << "    n_max_radial = " << paramb.n_max_radial << ".\n";
+    std::cout << "    n_max_angular = " << paramb.n_max_angular << ".\n";
+    if (paramb.version >= 3) {
+      std::cout << "    basis_size_radial = " << paramb.basis_size_radial << ".\n";
+      std::cout << "    basis_size_angular = " << paramb.basis_size_angular << ".\n";
+    }
+    std::cout << "    l_max_3body = " << paramb.L_max << ".\n";
+    std::cout << "    l_max_4body = " << (paramb.num_L >= 5 ? 2 : 0) << ".\n";
+    std::cout << "    l_max_5body = " << (paramb.num_L >= 6 ? 1 : 0) << ".\n";
+    std::cout << "    ANN = " << annmb.dim << "-" << annmb.num_neurons1 << "-1.\n";
+    std::cout << "    number of neural network parameters = "
+              << annmb.num_para - num_para_descriptor << ".\n";
+    std::cout << "    number of descriptor parameters = " << num_para_descriptor << ".\n";
+    std::cout << "    total number of parameters = " << annmb.num_para << ".\n";
+  }
 }
 
-void NEP3::update_potential(const double* parameters, ANN& ann)
+void NEP3::update_potential(double* parameters, ANN& ann)
 {
-  ann.w0 = parameters;
-  ann.b0 = ann.w0 + ann.num_neurons1 * ann.dim;
-  ann.w1 = ann.b0 + ann.num_neurons1;
-  ann.b1 = ann.w1 + ann.num_neurons1;
+  double* pointer = parameters;
+  for (int t = 0; t < paramb.num_types; ++t) {
+    if (t > 0 && paramb.version != 4) { // Use the same set of NN parameters for NEP2 and NEP3
+      pointer -= (ann.dim + 2) * ann.num_neurons1;
+    }
+    ann.w0[t] = pointer;
+    pointer += ann.num_neurons1 * ann.dim;
+    ann.b0[t] = pointer;
+    pointer += ann.num_neurons1;
+    ann.w1[t] = pointer;
+    pointer += ann.num_neurons1;
+  }
+  ann.b1 = pointer;
   ann.c = ann.b1 + 1;
 }
 
@@ -1576,4 +2112,36 @@ void NEP3::find_latent_space(
     NL_angular.data(), type.data(), r12.data(), r12.data() + size_x12, r12.data() + size_x12 * 2,
     r12.data() + size_x12 * 3, r12.data() + size_x12 * 4, r12.data() + size_x12 * 5, Fp.data(),
     sum_fxyz.data(), nullptr, nullptr, latent_space.data());
+}
+
+void NEP3::compute_for_lammps(
+  int N,
+  int* ilist,
+  int* NN,
+  int** NL,
+  int* type,
+  double** pos,
+  double& total_potential,
+  double total_virial[6],
+  double* potential,
+  double** force,
+  double** virial)
+{
+  if (num_atoms < N) {
+    Fp.resize(N * annmb.dim);
+    sum_fxyz.resize(N * (paramb.n_max_angular + 1) * NUM_OF_ABC);
+    num_atoms = N;
+  }
+  find_descriptor_for_lammps(
+    paramb, annmb, N, ilist, NN, NL, type, pos, Fp.data(), sum_fxyz.data(), total_potential,
+    potential);
+  find_force_radial_for_lammps(
+    paramb, annmb, N, ilist, NN, NL, type, pos, Fp.data(), force, total_virial, virial);
+  find_force_angular_for_lammps(
+    paramb, annmb, N, ilist, NN, NL, type, pos, Fp.data(), sum_fxyz.data(), force, total_virial,
+    virial);
+  if (zbl.enabled) {
+    find_force_ZBL_for_lammps(
+      zbl, N, ilist, NN, NL, type, pos, force, total_virial, virial, total_potential, potential);
+  }
 }

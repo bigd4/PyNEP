@@ -47,10 +47,6 @@ NepCalculator::NepCalculator(std::string _model_file)
   info["basis_size_radial"] = calc.paramb.basis_size_radial;
   info["basis_size_angular"] = calc.paramb.basis_size_angular;
   info["l_max_3body"] = calc.paramb.L_max;
-  if (calc.paramb.version > 2) {
-    info["l_max_4body"] = calc.paramb.L_max_4body;
-    info["l_max_5body"] = calc.paramb.L_max_5body;
-  }
   info["num_node"] = calc.annmb.dim;
   info["num_para"] = calc.annmb.num_para;
   info["element_list"] = calc.element_list;

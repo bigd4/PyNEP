@@ -1,16 +1,16 @@
 /*
-    Copyright 2017 Zheyong Fan, Ville Vierimaa, Mikko Ervasti, and Ari Harju
-    This file is part of GPUMD.
-    GPUMD is free software: you can redistribute it and/or modify
+    Copyright 2022 Zheyong Fan, Junjie Wang, Eric Lindgren
+    This file is part of NEP_CPU.
+    NEP_CPU is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    GPUMD is distributed in the hope that it will be useful,
+    NEP_CPU is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
     You should have received a copy of the GNU General Public License
-    along with GPUMD.  If not, see <http://www.gnu.org/licenses/>.
+    along with NEP_CPU.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #pragma once
@@ -29,8 +29,6 @@ public:
     int n_max_radial = 0;
     int n_max_angular = 0;
     int L_max = 0;
-    int L_max_4body = -1;
-    int L_max_5body = -1;
     int dim_angular;
     int num_L;
     int basis_size_radial = 8;
@@ -45,9 +43,9 @@ public:
     int dim = 0;
     int num_neurons1 = 0;
     int num_para = 0;
-    const double* w0;
-    const double* b0;
-    const double* w1;
+    const double* w0[100];
+    const double* b0[100];
+    const double* w1[100];
     const double* b1;
     const double* c;
   };
@@ -58,9 +56,11 @@ public:
     double rc_outer = 2.0;
     double atomic_numbers[10];
   };
-  
+
   NEP3();
   NEP3(const std::string& potential_filename);
+
+  void init_from_file(const std::string& potential_filename, const bool is_rank_0);
 
   // type[num_atoms] should be integers 0, 1, ..., mapping to the atom types in nep.txt in order
   // box[9] is ordered as ax, bx, cx, ay, by, cy, az, bz, cz
@@ -92,6 +92,20 @@ public:
     const std::vector<double>& position,
     std::vector<double>& latent_space);
 
+  void compute_for_lammps(
+    int inum,                // list->inum
+    int* ilist,              // list->ilist
+    int* numneigh,           // list->numneigh
+    int** firstneigh,        // list->firstneigh
+    int* type,               // atom->type
+    double** x,              // atom->x
+    double& total_potential, // total potential energy for the current processor
+    double total_virial[6],  // total virial for the current processor
+    double* potential,       // eatom or nullptr
+    double** f,              // atom->f
+    double** virial          // cvatom or nullptr
+  );
+
   int num_atoms = 0;
   int num_cells[3];
   double ebox[18];
@@ -104,6 +118,6 @@ public:
   std::vector<double> sum_fxyz;
   std::vector<double> parameters;
   std::vector<std::string> element_list;
-  void update_potential(const double* parameters, ANN& ann);
+  void update_potential(double* parameters, ANN& ann);
   void allocate_memory(const int N);
 };
