@@ -2,7 +2,6 @@ import numpy as np
 from ase.calculators.singlepoint import SinglePointCalculator
 from collections import OrderedDict
 from ase import Atoms
-from quip_gap_xyz import QuipGapxyzSystems
 import re
 
 # copy from dpdata-0.2.6:  dpdata/xyz/quip_gap_xyz.py

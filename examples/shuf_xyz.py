@@ -1,3 +1,11 @@
+"""
+Shuffle XYZ
+===========================
+
+This example shows how to shuffle structures randomly
+
+provided by Kick-H
+"""
 from pynep.io import load_nep,dump_nep
 import random
 
