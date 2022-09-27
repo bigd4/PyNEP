@@ -41,11 +41,11 @@ $ python setup.py install
 
 ```shell
 $ git clone --recursive https://github.com/bigd4/PyNEP.git
-$ cd pynep/nep_cpu
+$ cd PyNEP/nep_cpu
 $ mkdir build
 $ cd build
 $ cmake .. && make
-$ cp nep.so ../../pynep
+$ cp nep.so ../../PyNEP
 ```
 
 Add `pynep` to your [`PYTHONPATH`](https://wiki.fysik.dtu.dk/ase/install.html#envvar-PYTHONPATH) environment variable in your `~/.bashrc` file.
