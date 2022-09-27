@@ -252,7 +252,6 @@ def dump_nep(filename, frames, ftype="nep"):
                     virial = -atoms.info['stress'].reshape(-1) * atoms.get_volume()
                 else:
                     virial = -atoms.info['stress'][[0, 5, 4, 5, 1, 3, 4, 3, 2]] * atoms.get_volume()
-                virial = -atoms.info['stress'].reshape(-1) * atoms.get_volume()
                 Out_string += "virial=\"" + " ".join(list(map(str, virial))) + "\" "
             Out_string += "Lattice=\"" + " ".join(list(map(str, atoms.get_cell().reshape(-1)))) + "\" "
             Out_string += "Properties=species:S:1:pos:R:3:force:R:3\n"
