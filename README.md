@@ -33,7 +33,7 @@ $ pip install git+https://github.com/bigd4/PyNEP.git
 
 ```shell
 $ git clone --recursive https://github.com/bigd4/PyNEP.git
-$ cd pynep
+$ cd PyNEP
 $ python setup.py install
 ```
 
@@ -41,17 +41,33 @@ $ python setup.py install
 
 ```shell
 $ git clone --recursive https://github.com/bigd4/PyNEP.git
-$ cd pynep/nep_cpu
+$ cd PyNEP/nep_cpu
 $ mkdir build
 $ cd build
 $ cmake .. && make
-$ cp nep.so ../../pynep
+$ cp nep.so ../../PyNEP
 ```
 
 Add `pynep` to your [`PYTHONPATH`](https://wiki.fysik.dtu.dk/ase/install.html#envvar-PYTHONPATH) environment variable in your `~/.bashrc` file.
 
 ```shell
 $ export PYTHONPATH=<path-to-pynep-package>:$PYTHONPATH
+```
+
+## File format conversion
+
+```python
+
+#For an example of a randomly split training datasets: examples/shuf_xyz.py
+
+# NEP to exyz
+train_data = load_nep("train.in", ftype="nep")
+dump_nep("train.xyz", train_data, ftype="exyz")
+
+# exyz to NEP
+train_data = load_nep("train.xyz", ftype="exyz")
+dump_nep("train.in", train_data, ftype="nep")
+
 ```
 
 ## Usage

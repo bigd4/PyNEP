@@ -248,16 +248,15 @@ def dump_nep(filename, frames, ftype="nep"):
             Out_string += "config_type=FromPyNEP "
             Out_string += "pbc=\"T T T\" "
             if 'stress' in atoms.info:
-                if len(atoms.info['stress']) == 6:
-                    virial = -atoms.info['stress'][[0, 1, 2, 5, 3, 4]] * atoms.get_volume()
+                if len(atoms.info['stress']) == 9:
+                    virial = -atoms.info['stress'].reshape(-1) * atoms.get_volume()
                 else:
-                    virial = -atoms.info['stress'][[0, 1, 2, 0, 1, 2], [0, 1, 2, 1, 2, 0]] * atoms.get_volume()
+                    virial = -atoms.info['stress'][[0, 5, 4, 5, 1, 3, 4, 3, 2]] * atoms.get_volume()
                 Out_string += "virial=\"" + " ".join(list(map(str, virial))) + "\" "
             Out_string += "Lattice=\"" + " ".join(list(map(str, atoms.get_cell().reshape(-1)))) + "\" "
             Out_string += "Properties=species:S:1:pos:R:3:force:R:3\n"
 
             for j in range(int(len(atoms))):
-
                 s = atoms.get_chemical_symbols()
                 p = atoms.get_positions()
                 forces = atoms.info['forces']
