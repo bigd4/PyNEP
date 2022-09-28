@@ -56,7 +56,7 @@ def Proc_block(lines):
             Z_array = data_array[:,used_colomn:used_colomn+field_length].flatten()
             used_colomn += field_length
             continue
-        elif kv_dict['key'] == 'force':
+        elif kv_dict['key'] == 'force' or kv_dict['key'] == 'forces':
             if kv_dict['datatype'] != 'R':
                 raise RuntimeError("datatype for pos must be 'R' instead of {}".format(kv_dict['datatype']))
             field_length = int(kv_dict['value'])
