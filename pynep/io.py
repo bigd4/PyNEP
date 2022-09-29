@@ -92,25 +92,14 @@ def Proc_block(lines):
     else:
         virials = None
 
-    info_dict = {}
-    info_dict['atom_names'] = list(type_num_array[:,0])
-    info_dict['atom_numbs'] = list(type_num_array[:,1].astype(int))
-    info_dict['atom_types'] = np.array(atom_type_list).astype(int)
-    info_dict['cells'] = np.array([np.array(list(filter(bool,field_dict['Lattice'].split(' ')))).reshape(3,3)]).astype('float32')
-    info_dict['coords'] = np.array([coords_array]).astype('float32')
-    info_dict['energies'] = np.array([field_dict['energy']]).astype('float32')
-    info_dict['forces'] = np.array([force_array]).astype('float32')
-    if virials is not None:
-        info_dict['virials'] = virials
-    info_dict['orig'] = [0,0,0]
-
     cell = np.array(np.array(list(filter(bool,field_dict['Lattice'].split(' ')))).reshape(3,3)).astype('float32')
     positions = np.array(coords_array).astype('float32')
     symbols = np.array(type_array).astype(str)
 
     d = {}
     d['energy'] = np.array(field_dict['energy']).astype('float32')
-    d['stress'] = -virials / np.linalg.det(cell)
+    if virials is not None:
+        d['stress'] = -virials / np.linalg.det(cell)
     d['forces'] = np.array(force_array).astype('float32')
 
     atoms = Atoms(cell=cell, positions=positions, symbols=symbols, pbc=True)
@@ -257,6 +246,7 @@ def dump_nep(filename, frames, ftype="nep"):
             Out_string += "Properties=species:S:1:pos:R:3:force:R:3\n"
 
             for j in range(int(len(atoms))):
+
                 s = atoms.get_chemical_symbols()
                 p = atoms.get_positions()
                 forces = atoms.info['forces']
