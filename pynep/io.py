@@ -18,9 +18,9 @@ def Proc_block(lines):
     data_format_list= [kv_dict.groupdict() for kv_dict in field_value_pattern.finditer(data_format_line)]
     field_dict = {}
     for item in data_format_list:
-        field_dict[item['key']]=item['value']
+        field_dict[item['key'].lower()]=item['value']
 
-    Properties = field_dict['Properties']
+    Properties = field_dict['properties']
     prop_list = [kv_dict.groupdict() for kv_dict in prop_pattern.finditer(Properties)]
 
     data_lines = []
@@ -92,7 +92,7 @@ def Proc_block(lines):
     else:
         virials = None
 
-    cell = np.array(np.array(list(filter(bool,field_dict['Lattice'].split(' ')))).reshape(3,3)).astype('float32')
+    cell = np.array(np.array(list(filter(bool,field_dict['lattice'].split(' ')))).reshape(3,3)).astype('float32')
     positions = np.array(coords_array).astype('float32')
     symbols = np.array(type_array).astype(str)
 
