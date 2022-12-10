@@ -7,7 +7,7 @@ class NEP(Calculator):
 
     """ASE calculator for NEP (see https://github.com/brucefan1983/GPUMD)
     supported properties: energy, forces, stress, descriptor, latent descriptor
-    
+
     Examples:
 
     Use C_2022_NEP3.txt to calculate properties of diamond 
@@ -29,12 +29,13 @@ class NEP(Calculator):
     """
 
     implemented_properties = [
-        "energy", 
-        "forces", 
-        "stress", 
+        "energy",
+        "energies",
+        "forces",
+        "stress",
         "descriptor",
         "latent",
-        ]
+    ]
 
     def __init__(self, model_file="nep.txt", **kwargs) -> None:
         """Initialize calculator
@@ -44,11 +45,13 @@ class NEP(Calculator):
         """
         Calculator.__init__(self, **kwargs)
         self.calc = NepCalculator(model_file)
-        self.type_dict = {e: i for i, e in enumerate(self.calc.info["element_list"])}
+        self.type_dict = {e: i for i, e in enumerate(
+            self.calc.info["element_list"])}
 
     def __repr__(self):
         info = self.calc.info
-        ret = "NEP {} calculator with {} symbols: ".format(info['version'], len(self.type_dict))
+        ret = "NEP {} calculator with {} symbols: ".format(
+            info['version'], len(self.type_dict))
         info.pop("version")
         for key in self.type_dict:
             ret += key + " "
@@ -75,18 +78,24 @@ class NEP(Calculator):
         self.calc.setAtoms(len(atoms), _type, _box, _position)
         self.calc.calculate()
         self.results["energy"] = np.sum(self.calc.getPotentialEnergy())
-        self.results["forces"] = np.array(self.calc.getForces()).reshape(3, -1).transpose(1, 0)
+        self.results["energies"] = np.array(self.calc.getPotentialEnergy())
+        self.results["forces"] = np.array(
+            self.calc.getForces()).reshape(3, -1).transpose(1, 0)
 
         if "stress" in properties:
-            virial = np.sum(np.array(self.calc.getVirials()).reshape(9, -1), axis=1)
+            virial = np.sum(
+                np.array(self.calc.getVirials()).reshape(9, -1), axis=1)
             if sum(atoms.get_pbc()) > 0:
-                stress = -0.5 * (virial.copy() + virial.copy().T) / atoms.get_volume()
+                stress = -0.5 * (virial.copy() +
+                                 virial.copy().T) / atoms.get_volume()
                 self.results['stress'] = stress.flat[[0, 4, 8, 5, 2, 1]]
             else:
                 raise PropertyNotImplementedError
 
         if "descriptor" in properties:
-            self.results['descriptor'] = np.array(self.calc.getDescriptors()).reshape(-1, len(atoms)).transpose(1, 0)
+            self.results['descriptor'] = np.array(
+                self.calc.getDescriptors()).reshape(-1, len(atoms)).transpose(1, 0)
 
         if "latent" in properties:
-            self.results['latent'] = np.array(self.calc.getLatent()).reshape(-1, len(atoms)).transpose(1, 0)
+            self.results['latent'] = np.array(
+                self.calc.getLatent()).reshape(-1, len(atoms)).transpose(1, 0)
