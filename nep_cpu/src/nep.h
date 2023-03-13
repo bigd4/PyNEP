@@ -43,18 +43,23 @@ public:
     int dim = 0;
     int num_neurons1 = 0;
     int num_para = 0;
-    const double* w0[100];
-    const double* b0[100];
-    const double* w1[100];
+    const double* w0[103];
+    const double* b0[103];
+    const double* w1[103];
     const double* b1;
     const double* c;
   };
 
   struct ZBL {
     bool enabled = false;
+    bool flexibled = false;
+    int num_types;
     double rc_inner = 1.0;
     double rc_outer = 2.0;
-    double atomic_numbers[10];
+    double atomic_numbers[103];
+    double rc_flexible_inner[55];
+    double rc_flexible_outer[55];
+    double para[330];
   };
 
   NEP3();
@@ -91,6 +96,13 @@ public:
     const std::vector<double>& box,
     const std::vector<double>& position,
     std::vector<double>& latent_space);
+
+  void find_dipole(
+    const std::vector<int>& type,
+    const std::vector<double>& box,
+    const std::vector<double>& position,
+    std::vector<double>& dipole // 3 components, for the whole box
+  );
 
   void compute_for_lammps(
     int inum,                // list->inum
