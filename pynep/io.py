@@ -56,7 +56,7 @@ def Proc_block(lines):
             Z_array = data_array[:,used_colomn:used_colomn+field_length].flatten()
             used_colomn += field_length
             continue
-        elif kv_dict['key'] == 'force' or kv_dict['key'] == 'forces':
+        elif kv_dict['key'] == 'force':
             if kv_dict['datatype'] != 'R':
                 raise RuntimeError("datatype for pos must be 'R' instead of {}".format(kv_dict['datatype']))
             field_length = int(kv_dict['value'])
@@ -128,6 +128,7 @@ def load_nep(filename, ftype="nep"):
             n_frames = int(line)
             for _ in range(n_frames):
                 line = f.readline()
+                print(line)
                 n_atoms.append(int(line.split()[0]))
                 has_virial.append(int(line.split()[1]))
             for i in range(n_frames):
@@ -184,7 +185,7 @@ def load_nep(filename, ftype="nep"):
     return frames
 
 
-def dump_nep(filename, frames, ftype="nep"):
+def dump_nep(filename, frames, ftype="nep", dvi_virial=False):
     """dump data in nep format
 
     Args:
@@ -227,32 +228,46 @@ def dump_nep(filename, frames, ftype="nep"):
     # copy from nep2xyz.py
     elif ftype == "exyz":
 
-        fo = open(filename, 'w')
+        has_virial = ""
+        no_virial = ""
         for atoms in frames:
 
-            Out_string = ""
-
-            Out_string += str(int(len(atoms))) + "\n"
-            Out_string += "energy=" + str(atoms.info['energy']) + " "
-            Out_string += "config_type=FromPyNEP "
-            Out_string += "pbc=\"T T T\" "
+            this_infos = str(int(len(atoms))) + "\n"
+            this_infos += "energy=" + str(atoms.info['energy']) + " "
+            this_infos += "config_type=FromPyNEP "
+            this_infos += "pbc=\"T T T\" "
             if 'stress' in atoms.info:
+                #print(atoms.info['stress'])
+                #print(len(atoms.info['stress']))
                 if len(atoms.info['stress']) == 6:
                     virial = -atoms.info['stress'][[0, 5, 4, 5, 1, 3, 4, 3, 2]] * atoms.get_volume()
                 else:
                     virial = -atoms.info['stress'].reshape(-1) * atoms.get_volume()
-                Out_string += "virial=\"" + " ".join(list(map(str, virial))) + "\" "
-            Out_string += "Lattice=\"" + " ".join(list(map(str, atoms.get_cell().reshape(-1)))) + "\" "
-            Out_string += "Properties=species:S:1:pos:R:3:force:R:3\n"
+                this_infos += "virial=\"" + " ".join(list(map(str, virial))) + "\" "
+            this_infos += "Lattice=\"" + " ".join(list(map(str, atoms.get_cell().reshape(-1)))) + "\" "
+            this_infos += "Properties=species:S:1:pos:R:3:force:R:3\n"
 
             for j in range(int(len(atoms))):
 
                 s = atoms.get_chemical_symbols()
                 p = atoms.get_positions()
                 forces = atoms.info['forces']
-                Out_string += '{:2} {:>15.8e} {:>15.8e} {:>15.8e} {:>15.8e} {:>15.8e} {:>15.8e}\n'.format(
+                this_infos += '{:2} {:>15.8e} {:>15.8e} {:>15.8e} {:>15.8e} {:>15.8e} {:>15.8e}\n'.format(
                                s[j], *p[j], *forces[j])
+            if 'stress' in atoms.info:
+                has_virial += this_infos
+            else:
+                no_virial += this_infos
 
-            fo.write(Out_string)
-
-        fo.close()
+        if dvi_virial == True:
+            fho = open(f"has_virial_{filename}", 'w')
+            fho.write(has_virial)
+            fho.close()
+            fno = open(f"no_virial_{filename}", 'w')
+            fno.write(no_virial)
+            fno.close()
+        else:
+            fo = open(filename, 'w')
+            fo.write(has_virial)
+            fo.write(no_virial)
+            fo.close()
