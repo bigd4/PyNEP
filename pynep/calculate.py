@@ -99,3 +99,36 @@ class NEP(Calculator):
         if "latent" in properties:
             self.results['latent'] = np.array(
                 self.calc.getLatent()).reshape(-1, len(atoms)).transpose(1, 0)
+
+
+class JointCalculator(Calculator):
+    
+    implemented_properties = [
+        "energy",
+        "forces",
+        "stress",
+    ]
+
+    def __init__(self, *args, **kwargs) -> None:
+        Calculator.__init__(self, **kwargs)
+        self.calc_list = args
+
+    def calculate(
+        self,
+        atoms=None,
+        properties=None,
+        system_changes=all_changes,
+    ):
+        if properties is None:
+            properties = self.implemented_properties
+
+        Calculator.calculate(self, atoms, properties, system_changes)
+
+        self.results["energy"] = 0.
+        self.results["forces"] = np.zeros((len(atoms), 3))
+        self.results['stress'] = np.zeros(6)
+        for calc in self.calc_list:
+            self.results["energy"] += calc.get_potential_energy(self.atoms)
+            self.results["forces"] += calc.get_forces(self.atoms)
+            if "stress" in properties:
+                self.results['stress'] += calc.get_stress(self.atoms)
