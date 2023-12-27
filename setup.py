@@ -13,13 +13,15 @@ del sys.path[-1]
 # for C/ObjC but not for C++
 class BuildExt(build_ext):
     def build_extensions(self):
-        if '-Wstrict-prototypes' in self.compiler.compiler_so:
-            self.compiler.compiler_so.remove('-Wstrict-prototypes')
-        if '-Wsign-compare' in self.compiler.compiler_so:
-            self.compiler.compiler_so.remove('-Wsign-compare')
-            self.compiler.compiler_so.append('-Wno-sign-compare')
+        # Check if the compiler is a GCC variant
+        if self.compiler.compiler_type == 'unix':
+            if '-Wstrict-prototypes' in self.compiler.compiler_so:
+                self.compiler.compiler_so.remove('-Wstrict-prototypes')
+            if '-Wsign-compare' in self.compiler.compiler_so:
+                self.compiler.compiler_so.remove('-Wsign-compare')
+                self.compiler.compiler_so.append('-Wno-sign-compare')
+        # Add conditions for other compiler types if necessary
         super().build_extensions()
-
 
 #generatenew
 module_Nep = Pybind11Extension('pynep.nep',
