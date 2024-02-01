@@ -101,7 +101,6 @@ std::vector<double> NepCalculator::getVirials()
 
 std::vector<double> NepCalculator::getDescriptors()
 {
-  calculate();
   calc.find_descriptor(atom.type, atom.box, atom.position, atom.descriptor);
   return atom.descriptor;
 }

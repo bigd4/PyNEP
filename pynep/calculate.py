@@ -1,5 +1,9 @@
 import numpy as np
-from ase.calculators.calculator import Calculator, all_changes, PropertyNotImplementedError
+from ase.calculators.calculator import (
+    Calculator,
+    all_changes,
+    PropertyNotImplementedError,
+)
 from .nep import NepCalculator
 
 
@@ -10,7 +14,7 @@ class NEP(Calculator):
 
     Examples:
 
-    Use C_2022_NEP3.txt to calculate properties of diamond 
+    Use C_2022_NEP3.txt to calculate properties of diamond
     (from https://github.com/brucefan1983/GPUMD/tree/master/potentials/nepCalculate)
 
     energy, forces and stress:
@@ -45,20 +49,32 @@ class NEP(Calculator):
         """
         Calculator.__init__(self, **kwargs)
         self.calc = NepCalculator(model_file)
-        self.type_dict = {e: i for i, e in enumerate(
-            self.calc.info["element_list"])}
+        self.type_dict = {e: i for i, e in enumerate(self.calc.info["element_list"])}
 
     def __repr__(self):
         info = self.calc.info
         ret = "NEP {} calculator with {} symbols: ".format(
-            info['version'], len(self.type_dict))
+            info["version"], len(self.type_dict)
+        )
         info.pop("version")
         for key in self.type_dict:
             ret += key + " "
         ret += "\n" + "-" * 30
         for key, value in info.items():
-            ret += "\n  {}: {}".format(key.ljust(20, ' '), value)
+            ret += "\n  {}: {}".format(key.ljust(20, " "), value)
         ret += "\n" + "-" * 30 + "\n"
+        return ret
+
+    def get_descriptor(self, atoms):
+        Calculator.calculate(self, atoms, None, None)
+        symbols = self.atoms.get_chemical_symbols()
+        _type = [self.type_dict[k] for k in symbols]
+        _box = atoms.cell.transpose(1, 0).reshape(-1).tolist()
+        _position = atoms.get_positions().transpose(1, 0).reshape(-1).tolist()
+        self.calc.setAtoms(len(atoms), _type, _box, _position)
+        ret = (
+            np.array(self.calc.getDescriptors()).reshape(-1, len(atoms)).transpose(1, 0)
+        )
         return ret
 
     def calculate(
@@ -79,30 +95,32 @@ class NEP(Calculator):
         self.calc.calculate()
         self.results["energy"] = np.sum(self.calc.getPotentialEnergy())
         self.results["energies"] = np.array(self.calc.getPotentialEnergy())
-        self.results["forces"] = np.array(
-            self.calc.getForces()).reshape(3, -1).transpose(1, 0)
+        self.results["forces"] = (
+            np.array(self.calc.getForces()).reshape(3, -1).transpose(1, 0)
+        )
 
         if "stress" in properties:
-            virial = np.sum(
-                np.array(self.calc.getVirials()).reshape(9, -1), axis=1)
+            virial = np.sum(np.array(self.calc.getVirials()).reshape(9, -1), axis=1)
             if sum(atoms.get_pbc()) > 0:
-                stress = -0.5 * (virial.copy() +
-                                 virial.copy().T) / atoms.get_volume()
-                self.results['stress'] = stress.flat[[0, 4, 8, 5, 2, 1]]
+                stress = -0.5 * (virial.copy() + virial.copy().T) / atoms.get_volume()
+                self.results["stress"] = stress.flat[[0, 4, 8, 5, 2, 1]]
             else:
                 raise PropertyNotImplementedError
 
         if "descriptor" in properties:
-            self.results['descriptor'] = np.array(
-                self.calc.getDescriptors()).reshape(-1, len(atoms)).transpose(1, 0)
+            self.results["descriptor"] = (
+                np.array(self.calc.getDescriptors())
+                .reshape(-1, len(atoms))
+                .transpose(1, 0)
+            )
 
         if "latent" in properties:
-            self.results['latent'] = np.array(
-                self.calc.getLatent()).reshape(-1, len(atoms)).transpose(1, 0)
+            self.results["latent"] = (
+                np.array(self.calc.getLatent()).reshape(-1, len(atoms)).transpose(1, 0)
+            )
 
 
 class JointCalculator(Calculator):
-    
     implemented_properties = [
         "energy",
         "forces",
@@ -124,11 +142,11 @@ class JointCalculator(Calculator):
 
         Calculator.calculate(self, atoms, properties, system_changes)
 
-        self.results["energy"] = 0.
+        self.results["energy"] = 0.0
         self.results["forces"] = np.zeros((len(atoms), 3))
-        self.results['stress'] = np.zeros(6)
+        self.results["stress"] = np.zeros(6)
         for calc in self.calc_list:
             self.results["energy"] += calc.get_potential_energy(self.atoms)
             self.results["forces"] += calc.get_forces(self.atoms)
             if "stress" in properties:
-                self.results['stress'] += calc.get_stress(self.atoms)
+                self.results["stress"] += calc.get_stress(self.atoms)
