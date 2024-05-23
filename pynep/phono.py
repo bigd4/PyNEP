@@ -116,7 +116,7 @@ class PhonoCalc:
         if isinstance(self.dim, str):
             if self.dim == 'Auto':
                 lengths = atoms.cell.lengths()
-                return np.round(10 / lengths).astype('int')
+                return np.round(10 / lengths).astype('int').clip(1)
         else:
             return self.dim
 
