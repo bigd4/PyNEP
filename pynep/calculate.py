@@ -1,4 +1,5 @@
 import numpy as np
+import os, contextlib
 from ase.calculators.calculator import (
     Calculator,
     all_changes,
@@ -48,7 +49,9 @@ class NEP(Calculator):
             model_file (str, optional): filename of nep model. Defaults to "nep.txt".
         """
         Calculator.__init__(self, **kwargs)
-        self.calc = NepCalculator(model_file)
+        with open(os.devnull, 'w') as devnull:
+            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
+                self.calc = NepCalculator(model_file)
         self.type_dict = {e: i for i, e in enumerate(self.calc.info["element_list"])}
 
     def __repr__(self):
