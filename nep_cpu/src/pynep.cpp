@@ -7,6 +7,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/iostream.h>
 namespace py = pybind11;
 
 struct Atom {
@@ -37,6 +38,10 @@ class NepCalculator
 NepCalculator::NepCalculator(std::string _model_file)
 {
   model_file = _model_file;
+  py::scoped_ostream_redirect stream(
+    std::cout,                               // std::ostream&
+    py::module_::import("sys").attr("stdout") // Python output
+    );
   calc = NEP3(model_file);
   info["version"] = calc.paramb.version;
   info["zbl"] = calc.zbl.enabled;
