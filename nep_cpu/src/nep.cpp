@@ -124,12 +124,12 @@ namespace
       // calculate B_projection:
       // dE/dw0
       for (int d = 0; d < dim; ++d)
-        B_projection[n * (dim + 2) + d] = tan_der * q[d] * w1[n];
+		  B_projection[n * (dim + 2) + d] = tan_der * q[d] * w1[n];
       // dE/db0
       B_projection[n * (dim + 2) + dim] = -tan_der * w1[n];
       // dE/dw1
       B_projection[n * (dim + 2) + dim + 1] = x1;
-
+	  
       latent_space[n] = w1[n] * x1; // also try x1
       energy += w1[n] * x1;
       for (int d = 0; d < dim; ++d)
@@ -1129,7 +1129,7 @@ namespace
         }
       }
 
-      if (calculating_potential || calculating_latent_space || calculating_polarizability)
+      if (calculating_potential || calculating_latent_space || calculating_polarizability || calculating_B_projection)
       {
         for (int d = 0; d < annmb.dim; ++d)
         {
@@ -1156,7 +1156,7 @@ namespace
             latent_space[d] = 0.0;
           }
         }
-
+        
         if (!calculating_B_projection)
         {
           apply_ann_one_layer(
@@ -1169,6 +1169,7 @@ namespace
               annmb.dim, annmb.num_neurons1, annmb.w0[t1], annmb.b0[t1], annmb.w1[t1], annmb.b1, q, F, Fp,
               latent_space, g_B_projection + n1 * (annmb.num_neurons1 * (annmb.dim + 2)));
         }
+	  
 
         if (calculating_latent_space)
         {
@@ -1177,7 +1178,6 @@ namespace
             g_latent_space[n * N + n1] = latent_space[n];
           }
         }
-
         if (calculating_potential)
         {
           g_potential[n1] += F;
@@ -3311,9 +3311,8 @@ void NEP3::find_B_projection(
     std::cout << "Type and B_projection sizes are inconsistent.\n";
     exit(1);
   }
-
+  
   allocate_memory(N);
-
   find_neighbor_list_small_box(
       paramb.rc_radial, paramb.rc_angular, N, box, position, num_cells, ebox, NN_radial, NL_radial,
       NN_angular, NL_angular, r12);

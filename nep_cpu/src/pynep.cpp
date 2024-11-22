@@ -77,7 +77,6 @@ void NepCalculator::setAtoms(
   _atom.virial.resize(_atom.N * 9);
   _atom.descriptor.resize(_atom.N * calc.annmb.dim);
   _atom.latent.resize(_atom.N * calc.annmb.num_neurons1);
-  _atom.B_projection.resize(_atom.N * calc.annmb.num_neurons1 * (calc.annmb.dim + 2));
   atom = _atom;
   HAS_CALCULATED = false;
 }
@@ -124,6 +123,7 @@ std::vector<double> NepCalculator::getLatent()
 
 std::vector<double> NepCalculator::getB_projection()
 {
+  atom.B_projection.resize(atom.N * calc.annmb.num_neurons1 * (calc.annmb.dim + 2));
   calc.find_B_projection(atom.type, atom.box, atom.position, atom.B_projection);
   return atom.B_projection;
 }
