@@ -6,7 +6,9 @@ from pynep import __version__
 DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(DIR, "pybind11"))
 from pybind11.setup_helpers import Pybind11Extension
+
 del sys.path[-1]
+
 
 # Avoid a gcc warning below:
 # cc1plus: warning: command line option ‘-Wstrict-prototypes’ is valid
@@ -14,22 +16,24 @@ del sys.path[-1]
 class BuildExt(build_ext):
     def build_extensions(self):
         # Check if the compiler is a GCC variant
-        if self.compiler.compiler_type == 'unix':
-            if '-Wstrict-prototypes' in self.compiler.compiler_so:
-                self.compiler.compiler_so.remove('-Wstrict-prototypes')
-            if '-Wsign-compare' in self.compiler.compiler_so:
-                self.compiler.compiler_so.remove('-Wsign-compare')
-                self.compiler.compiler_so.append('-Wno-sign-compare')
+        if self.compiler.compiler_type == "unix":
+            if "-Wstrict-prototypes" in self.compiler.compiler_so:
+                self.compiler.compiler_so.remove("-Wstrict-prototypes")
+            if "-Wsign-compare" in self.compiler.compiler_so:
+                self.compiler.compiler_so.remove("-Wsign-compare")
+                self.compiler.compiler_so.append("-Wno-sign-compare")
         # Add conditions for other compiler types if necessary
         super().build_extensions()
 
-#generatenew
-module_Nep = Pybind11Extension('pynep.nep',
-        sources = ['nep_cpu/src/pynep.cpp', 'nep_cpu/src/nep.cpp'],
-        extra_compile_args=['-std=c++11'],
-        )
 
-with open('README.md') as f:
+# generatenew
+module_Nep = Pybind11Extension(
+    "pynep.nep",
+    sources=["nep_cpu/src/pynep.cpp", "nep_cpu/src/nep.cpp"],
+    extra_compile_args=["-std=c++11"],
+)
+
+with open("README.md") as f:
     long_description = f.read()
 
 setup(
@@ -41,14 +45,14 @@ setup(
     packages=find_packages(),
     python_requires=">=3.8",
     install_requires=[
-        "numpy<1.22.0",     # numba not support numpy >= 1.22.0
+        "numpy>=2.0",
         "ase>=3.18",
     ],
     license="MIT",
     description="PyNEP: Python tools for NEP",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    ext_modules=[module_Nep], 
-    cmdclass={'build_ext': BuildExt},
+    ext_modules=[module_Nep],
+    cmdclass={"build_ext": BuildExt},
     # entry_points={"console_scripts": [""]},
 )
