@@ -1168,7 +1168,7 @@ namespace
         }
       }
 
-      if (calculating_potential || calculating_latent_space || calculating_polarizability)
+      if (calculating_potential || calculating_latent_space || calculating_polarizability || calculating_B_projection)
       {
         for (int d = 0; d < annmb.dim; ++d)
         {
