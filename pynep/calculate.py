@@ -40,6 +40,7 @@ class NEP(Calculator):
         "stress",
         "descriptor",
         "latent",
+        "B_projection"
     ]
 
     def __init__(self, model_file="nep.txt", **kwargs) -> None:
@@ -120,6 +121,11 @@ class NEP(Calculator):
         if "latent" in properties:
             self.results["latent"] = (
                 np.array(self.calc.getLatent()).reshape(-1, len(atoms)).transpose(1, 0)
+            )
+
+        if "B_projection" in properties:
+            self.results["B_projection"] = (
+                np.array(self.calc.getB_projection()).reshape(len(atoms), -1)
             )
 
 
