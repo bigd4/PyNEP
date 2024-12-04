@@ -5,13 +5,12 @@
 #include <iostream>
 #include <time.h>
 
+#include <pybind11/iostream.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/iostream.h>
 namespace py = pybind11;
 
-struct Atom
-{
+struct Atom {
   int N;
   std::vector<int> type;
   std::vector<double> box, position, potential, force, virial, descriptor, latent, B_projection;
@@ -42,8 +41,8 @@ NepCalculator::NepCalculator(std::string _model_file)
 {
   model_file = _model_file;
   py::scoped_ostream_redirect stream(
-      std::cout,                                // std::ostream&
-      py::module_::import("sys").attr("stdout") // Python output
+    std::cout,                                // std::ostream&
+    py::module_::import("sys").attr("stdout") // Python output
   );
   calc = NEP3(model_file);
   info["version"] = calc.paramb.version;
@@ -61,10 +60,7 @@ NepCalculator::NepCalculator(std::string _model_file)
 }
 
 void NepCalculator::setAtoms(
-    int _N,
-    std::vector<int> _type,
-    std::vector<double> _box,
-    std::vector<double> _position)
+  int _N, std::vector<int> _type, std::vector<double> _box, std::vector<double> _position)
 {
   Atom _atom;
   _atom.N = _N;
@@ -83,8 +79,7 @@ void NepCalculator::setAtoms(
 
 void NepCalculator::calculate()
 {
-  if (!HAS_CALCULATED)
-  {
+  if (!HAS_CALCULATED) {
     calc.compute(atom.type, atom.box, atom.position, atom.potential, atom.force, atom.virial);
     HAS_CALCULATED = true;
   }
@@ -132,14 +127,14 @@ PYBIND11_MODULE(nep, m)
 {
   m.doc() = "nep";
   py::class_<NepCalculator>(m, "NepCalculator")
-      .def(py::init<std::string>())
-      .def_readonly("info", &NepCalculator::info)
-      .def("setAtoms", &NepCalculator::setAtoms)
-      .def("calculate", &NepCalculator::calculate)
-      .def("getPotentialEnergy", &NepCalculator::getPotentialEnergy)
-      .def("getForces", &NepCalculator::getForces)
-      .def("getVirials", &NepCalculator::getVirials)
-      .def("getDescriptors", &NepCalculator::getDescriptors)
-      .def("getLatent", &NepCalculator::getLatent)
-      .def("getB_projection", &NepCalculator::getB_projection);
+    .def(py::init<std::string>())
+    .def_readonly("info", &NepCalculator::info)
+    .def("setAtoms", &NepCalculator::setAtoms)
+    .def("calculate", &NepCalculator::calculate)
+    .def("getPotentialEnergy", &NepCalculator::getPotentialEnergy)
+    .def("getForces", &NepCalculator::getForces)
+    .def("getVirials", &NepCalculator::getVirials)
+    .def("getDescriptors", &NepCalculator::getDescriptors)
+    .def("getLatent", &NepCalculator::getLatent)
+    .def("getB_projection", &NepCalculator::getB_projection);
 }
