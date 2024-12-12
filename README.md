@@ -18,7 +18,7 @@
 |  Package  | version |
 |  ----  | ----  |
 | [Python](https://www.python.org/) | >=     3.8 |
-| [NumPy](https://docs.scipy.org/doc/numpy/reference/) | > 2.0 |
+| [NumPy](https://docs.scipy.org/doc/numpy/reference/) | >= 2.0 |
 |[SciPy](https://docs.scipy.org/doc/scipy/reference/)|>=     1.1|
 |[ase](https://wiki.fysik.dtu.dk/ase/index.html)|>=     3.18.0|
 
