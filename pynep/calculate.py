@@ -9,7 +9,6 @@ from .nep import NepCalculator
 
 
 class NEP(Calculator):
-
     """ASE calculator for NEP (see https://github.com/brucefan1983/GPUMD)
     supported properties: energy, forces, stress, descriptor, latent descriptor
 
@@ -40,7 +39,7 @@ class NEP(Calculator):
         "stress",
         "descriptor",
         "latent",
-        "B_projection"
+        "B_projection",
     ]
 
     def __init__(self, model_file="nep.txt", **kwargs) -> None:
@@ -50,8 +49,10 @@ class NEP(Calculator):
             model_file (str, optional): filename of nep model. Defaults to "nep.txt".
         """
         Calculator.__init__(self, **kwargs)
-        with open(os.devnull, 'w') as devnull:
-            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
+        with open(os.devnull, "w") as devnull:
+            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(
+                devnull
+            ):
                 self.calc = NepCalculator(model_file)
         self.type_dict = {e: i for i, e in enumerate(self.calc.info["element_list"])}
 
@@ -80,6 +81,20 @@ class NEP(Calculator):
             np.array(self.calc.getDescriptors()).reshape(-1, len(atoms)).transpose(1, 0)
         )
         return ret
+
+    def get_descriptor_grad(self, atoms, df_dq):
+        Calculator.calculate(self, atoms, None, None)
+        symbols = self.atoms.get_chemical_symbols()
+        _type = [self.type_dict[k] for k in symbols]
+        _box = atoms.cell.transpose(1, 0).reshape(-1).tolist()
+        _position = atoms.get_positions().transpose(1, 0).reshape(-1).tolist()
+        self.calc.setAtoms(len(atoms), _type, _box, _position)
+        forces, virial = self.calc.getDescriptorsGrad(df_dq)
+        forces = np.array(forces).reshape(3, -1).transpose(1, 0)
+        virial = np.sum(np.array(virial).reshape(9, -1), axis=1)
+        stress = -0.5 * (virial.copy() + virial.copy().T) / atoms.get_volume()
+        stress = stress.flat[[0, 4, 8, 5, 2, 1]]
+        return forces, stress
 
     def calculate(
         self,
@@ -124,9 +139,9 @@ class NEP(Calculator):
             )
 
         if "B_projection" in properties:
-            self.results["B_projection"] = (
-                np.array(self.calc.getB_projection()).reshape(len(atoms), -1)
-            )
+            self.results["B_projection"] = np.array(
+                self.calc.getB_projection()
+            ).reshape(len(atoms), -1)
 
 
 class JointCalculator(Calculator):

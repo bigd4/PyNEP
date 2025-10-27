@@ -29,6 +29,7 @@ public:
   std::vector<double> getDescriptors();
   std::vector<double> getLatent();
   std::vector<double> getB_projection();
+  std::tuple<std::vector<double>, std::vector<double>> getDescriptorsGrad(const std::vector<double>& df_dq);
 
 private:
   Atom atom;
@@ -109,6 +110,12 @@ std::vector<double> NepCalculator::getDescriptors()
   return atom.descriptor;
 }
 
+std::tuple<std::vector<double>, std::vector<double>> NepCalculator::getDescriptorsGrad(const std::vector<double>& df_dq)
+{
+  calc.compute_grad(atom.type, atom.box, atom.position, df_dq, atom.force, atom.virial);
+  return std::make_tuple(atom.force, atom.virial);
+}
+
 std::vector<double> NepCalculator::getLatent()
 {
   calculate();
@@ -135,6 +142,7 @@ PYBIND11_MODULE(nep, m)
     .def("getForces", &NepCalculator::getForces)
     .def("getVirials", &NepCalculator::getVirials)
     .def("getDescriptors", &NepCalculator::getDescriptors)
+    .def("getDescriptorsGrad", &NepCalculator::getDescriptorsGrad)
     .def("getLatent", &NepCalculator::getLatent)
     .def("getB_projection", &NepCalculator::getB_projection);
 }

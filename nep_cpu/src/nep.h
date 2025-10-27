@@ -113,6 +113,14 @@ public:
     std::vector<double>& force,
     std::vector<double>& virial);
 
+  void compute_grad(
+    const std::vector<int>& type,
+    const std::vector<double>& box,
+    const std::vector<double>& position,
+    const std::vector<double>& df_dq,
+    std::vector<double>& force,
+    std::vector<double>& virial);
+
   void compute_with_dftd3(
     const std::string& xc,
     const double rc_potential,

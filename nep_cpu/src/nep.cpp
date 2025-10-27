@@ -39,12 +39,12 @@ heat transport, Phys. Rev. B. 104, 104309 (2021).
 
 namespace
 {
-const int MAX_NEURON = 200; // maximum number of neurons in the hidden layer
+const int MAX_NEURON = 120; // maximum number of neurons in the hidden layer
 const int MN = 1000;        // maximum number of neighbors for one atom
 const int NUM_OF_ABC = 80;  // 3 + 5 + 7 + 9 + 11 + 13 + 15 + 17 for L_max = 8
-const int MAX_NUM_N = 20;   // n_max+1 = 19+1
-const int MAX_DIM = MAX_NUM_N * 7;
-const int MAX_DIM_ANGULAR = MAX_NUM_N * 6;
+const int MAX_NUM_N = 17;   // basis_size_radial+1 = 16+1
+const int MAX_DIM = 103;
+const int MAX_DIM_ANGULAR = 90;
 const double C3B[NUM_OF_ABC] = {
   0.238732414637843, 0.119366207318922, 0.119366207318922, 0.099471839432435, 0.596831036594608,
   0.596831036594608, 0.149207759148652, 0.149207759148652, 0.139260575205408, 0.104445431404056,
@@ -1047,7 +1047,6 @@ void find_descriptor_small_box(
 
     if (calculating_descriptor) {
       for (int d = 0; d < annmb.dim; ++d) {
-
         g_descriptor[d * N + n1] = q[d] * paramb.q_scaler[d];
       }
     }
@@ -2516,6 +2515,7 @@ double get_double_from_token(const std::string& token, const char* filename, con
   return value;
 }
 
+
 } // namespace
 
 NEP3::NEP3() {}
@@ -2982,6 +2982,70 @@ void NEP3::compute(
   }
 }
 
+void NEP3::compute_grad(
+  const std::vector<int>& type,
+  const std::vector<double>& box,
+  const std::vector<double>& position,
+  const std::vector<double>& df_dq,
+  std::vector<double>& force,
+  std::vector<double>& virial)
+{
+  if (paramb.model_type != 0) {
+    std::cout << "Cannot compute potential using a non-potential NEP model.\n";
+    exit(1);
+  }
+
+  const int N = type.size();
+  const int size_x12 = N * MN;
+
+  allocate_memory(N);
+  std::vector<double> df_dq_scaled(df_dq.size());
+
+  for (int d = 0; d < annmb.dim; ++d) {
+    for (int n1 = 0; n1 < N; ++n1) {
+      df_dq_scaled[d * N + n1] = df_dq[d * N + n1] * paramb.q_scaler[d];
+    }
+  }
+
+  for (int n = 0; n < force.size(); ++n) {
+    force[n] = 0.0;
+  }
+  for (int n = 0; n < virial.size(); ++n) {
+    virial[n] = 0.0;
+  }
+
+  find_neighbor_list_small_box(
+    paramb.rc_radial, paramb.rc_angular, N, box, position, num_cells, ebox, NN_radial, NL_radial,
+    NN_angular, NL_angular, r12);
+
+  find_descriptor_small_box(
+    false, false, false, false, paramb, annmb, N, NN_radial.data(), NL_radial.data(),
+    NN_angular.data(), NL_angular.data(), type.data(), r12.data(), r12.data() + size_x12,
+    r12.data() + size_x12 * 2, r12.data() + size_x12 * 3, r12.data() + size_x12 * 4,
+    r12.data() + size_x12 * 5,
+#ifdef USE_TABLE_FOR_RADIAL_FUNCTIONS
+    gn_radial.data(), gn_angular.data(),
+#endif
+    Fp.data(), sum_fxyz.data(), nullptr, nullptr, nullptr, nullptr, false, nullptr);
+
+  find_force_radial_small_box(
+    false, paramb, annmb, N, NN_radial.data(), NL_radial.data(), type.data(), r12.data(),
+    r12.data() + size_x12, r12.data() + size_x12 * 2, df_dq_scaled.data(),
+#ifdef USE_TABLE_FOR_RADIAL_FUNCTIONS
+    gnp_radial.data(),
+#endif
+    force.data(), force.data() + N, force.data() + N * 2, virial.data());
+
+  find_force_angular_small_box(
+    false, paramb, annmb, N, NN_angular.data(), NL_angular.data(), type.data(),
+    r12.data() + size_x12 * 3, r12.data() + size_x12 * 4, r12.data() + size_x12 * 5, df_dq_scaled.data(),
+    sum_fxyz.data(),
+#ifdef USE_TABLE_FOR_RADIAL_FUNCTIONS
+    gn_angular.data(), gnp_angular.data(),
+#endif
+    force.data(), force.data() + N, force.data() + N * 2, virial.data());
+}
+
 void NEP3::compute_with_dftd3(
   const std::string& xc,
   const double rc_potential,
@@ -3112,6 +3176,7 @@ void NEP3::find_descriptor(
 #endif
     Fp.data(), sum_fxyz.data(), nullptr, descriptor.data(), nullptr, nullptr, false, nullptr);
 }
+
 
 void NEP3::find_latent_space(
   const std::vector<int>& type,
@@ -3294,7 +3359,6 @@ void NEP3::find_polarizability(
     gn_radial.data(), gn_angular.data(),
 #endif
     Fp.data(), sum_fxyz.data(), potential.data(), nullptr, nullptr, virial.data(), false, nullptr);
-
   find_force_radial_small_box(
     false, paramb, annmb, N, NN_radial.data(), NL_radial.data(), type.data(), r12.data(),
     r12.data() + size_x12, r12.data() + size_x12 * 2, Fp.data(),
